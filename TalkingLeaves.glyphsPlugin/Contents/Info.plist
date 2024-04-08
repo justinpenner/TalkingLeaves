@@ -13,17 +13,15 @@
 	<key>CFBundleName</key>
 	<string>Talking Leaves</string>
 	<key>CFBundleShortVersionString</key>
-	<string>____BundleVersionString____</string> <!-- 1.0 -->
+	<string>0.1</string> <!-- 1.0 -->
 	<key>CFBundleVersion</key>
-	<string>____BundleVersion____</string> <!-- 123 -->
+	<string>1</string> <!-- 123 -->
 	<key>UpdateFeedURL</key>
-	<string>____OnlineUrlToThisPlist____</string>
+	<string>https://raw.githubusercontent.com/justinpenner/TalkingLeaves/main/TalkingLeaves.glyphsPlugin/Contents/Info.plist</string>
 	<key>productPageURL</key>
-	<string>____ProductPageURL____</string>
-	<key>productReleaseNotes</key>
-	<string>____LatestReleaseNotes____</string>
+	<string>https://github.com/justinpenner/TalkingLeaves</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright, ____Developer____, ____YEAR____</string>
+	<string>Copyright, Justin Penner, 2024</string>
 	<key>NSPrincipalClass</key>
 	<string>TalkingLeavesPlugin</string>
 	<key>PyMainFileNames</key>

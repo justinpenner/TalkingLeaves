@@ -8,6 +8,10 @@ import objc
 from GlyphsApp import *
 from GlyphsApp.plugins import *
 from TalkingLeaves import *
+try:
+  import hyperglot
+except ModuleNotFoundError:
+  hyperglot = None
 
 class TalkingLeavesPlugin(GeneralPlugin):
 
@@ -55,12 +59,13 @@ class TalkingLeavesPlugin(GeneralPlugin):
     self.menuItem.setHidden_(not status)
 
   def openWindow_(self, sender):
-    if self.tl:
+    if self.tl and hasattr(self.tl,'w'):
       self.tl.w.show()
     else:
-      self.menuItem.setState_(True)
       self.tl = TalkingLeaves()
-      self.tl.w.bind("close", self.windowWillClose_)
+      if hasattr(self.tl,'w'):
+        self.menuItem.setState_(True)
+        self.tl.w.bind("close", self.windowWillClose_)
 
   def windowWillClose_(self, sender):
     self.menuItem.setState_(False)

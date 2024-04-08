@@ -19,7 +19,12 @@ if Glyphs.versionNumber < 3.2:
   PKGS_PATH = '~/Library/Application Support/Glyphs 3/Scripts/site-packages'
   if PKGS_PATH not in sys.path:
     sys.path.append(PKGS_PATH)
-import hyperglot, hyperglot.languages
+
+try:
+  import hyperglot
+  import hyperglot.languages
+except ModuleNotFoundError:
+  hyperglot = None
 
 MIN_COLUMN_WIDTH = 20
 
@@ -32,6 +37,10 @@ def main():
 class TalkingLeaves:
 
   def __init__(self):
+
+    if not hyperglot:
+      Message("Hyperglot module is missing. Follow the installation instructions in README.md.", title='Cannot load TalkingLeaves', OKButton="OK")
+      return
 
     self.font = Glyphs.font
 

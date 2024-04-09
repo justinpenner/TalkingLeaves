@@ -30,7 +30,9 @@ You might be able to skip installing `cocoa-vanilla` if the Vanilla module is al
 
 Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock. Glyphs will ask you to confirm the install, then you can restart Glyphs to begin using TalkingLeaves. Open a font, then open TalkingLeaves via the Window menu.
 
-## Resources
+## Related resources
 
 - [Hyperglot](https://hyperglot.rosettatype.com/) web interface to check fonts for language support, and explore Hyperglot's database of languages and writing systems.
 - [Hyperglot @ Github](https://github.com/rosettatype/hyperglot/)
+- [Shaperglot](https://github.com/googlefonts/shaperglot/) another tool for checking language support similar to Hyperglot, but was originally initiated with the intent of checking OpenType features for languages that need more than just a minimum character set. Now Hyperglot and Shaperglot both have some ability to check OpenType features.
+- [gflanguages](https://github.com/googlefonts/lang/) the language database behind Shaperglot.

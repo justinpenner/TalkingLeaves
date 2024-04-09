@@ -12,7 +12,6 @@ from vanilla import (
 )
 import json
 from Foundation import NSURL, NSData
-from AppKit import NSTextAlignmentRight, NSColor
 
 if Glyphs.versionNumber < 3.2:
   import sys
@@ -43,51 +42,29 @@ class TalkingLeaves:
       return
 
     self.font = Glyphs.font
+    self.windowSize = (1000, 600)
+    self.startGUI()
 
     self.hg = hyperglot.languages.Languages()
-
-    self._hgFindScriptsAndSpeakers()
-
+    self.scriptsData = self.getScriptsAndSpeakers()
+    self.scripts = list(self.scriptsData.keys())
     self.defaultScriptIndex = 0
     self.defaultScript = self.scripts[self.defaultScriptIndex]
+    self.fillTables()
 
-    self.w = Window(
-      (1000,600),
-      f"Talking Leaves ({(Glyphs.currentDocument.filePath or self.font.familyName).split('/')[-1]} - {self.font.familyName})",
-      minSize=(640,180),
-    )
+  def startGUI(self):
 
-    scripts, scriptsHeaders = self.list2TableFrom2dArray_Headers_(
-      self.speakersByScriptDesc.items(),
-      ['Script','Speakers'],
-      [100]
-    )
-    self.scriptsTable = List2(
-      (0,0,-0,-0),
-      scripts,
-      columnDescriptions=scriptsHeaders,
-      allowsMultipleSelection=False,
-      # allowsEmptySelection=False,
-      enableTypingSensitivity=True,
-      selectionCallback=self._loadLangs,
-    )
-
-    self.w.showSupported = CheckBox(
-      "auto",
-      "Show supported",
-      sizeStyle="regular",
-      value=False,
-      callback=self.showSupportedCallback,
-    )
-    self.w.showUnsupported = CheckBox(
-      "auto",
-      "Show unsupported",
-      sizeStyle="regular",
-      value=True,
-      callback=self.showUnsupportedCallback,
-    )
-
-    langsColHeaders = [
+    self.scriptsColHeaders = [
+      dict(
+        title='Script',
+        width=100,
+      ),
+      dict(
+        title='Speakers',
+        width=100,
+      ),
+    ]
+    self.langsColHeaders = [
       dict(
         title='Language',
         width=160,
@@ -111,28 +88,51 @@ class TalkingLeaves:
         valueToCellConverter=self.missingValue_ToCell,
       ),
     ]
-    for colHeader in langsColHeaders:
-      colHeader['maxWidth'] = self.w.getPosSize()[2]
+    for colHeader in self.scriptsColHeaders + self.langsColHeaders:
+      colHeader['maxWidth'] = self.windowSize[0]
       colHeader['minWidth'] = MIN_COLUMN_WIDTH
       colHeader['sortable'] = True
       colHeader['identifier'] = colHeader['title']
 
-    # langs = self.hgFindLanguagesByScript_(self.defaultScript)
+    # Build GUI with Vanilla
+    self.w = Window(
+      self.windowSize,
+      f"Talking Leaves ({(Glyphs.currentDocument.filePath or self.font.familyName).split('/')[-1]} - {self.font.familyName})",
+      minSize=(640,180),
+    )
+    self.scriptsTable = List2(
+      (0,0,-0,-0),
+      [],
+      columnDescriptions=self.scriptsColHeaders,
+      allowsMultipleSelection=False,
+      enableTypingSensitivity=True,
+      selectionCallback=self.loadLangs,
+    )
+    self.w.showSupported = CheckBox(
+      "auto",
+      "Show supported",
+      sizeStyle="regular",
+      value=False,
+      callback=self.showSupportedCallback,
+    )
+    self.w.showUnsupported = CheckBox(
+      "auto",
+      "Show unsupported",
+      sizeStyle="regular",
+      value=True,
+      callback=self.showUnsupportedCallback,
+    )
     self.langsTable = List2(
       (0,0,-0,-0),
-      self.hgFindLanguagesByScript_(self.defaultScript),
-      columnDescriptions=langsColHeaders,
+      [],
+      columnDescriptions=self.langsColHeaders,
       enableTypingSensitivity=True,
     )
-    self.langsTable.getNSScrollView().setHasHorizontalScroller_(0)
-
     panes = [
       dict(view=self.scriptsTable,identifier="scripts",canCollapse=False,minSize=MIN_COLUMN_WIDTH),
       dict(view=self.langsTable,identifier="langs",canCollapse=False,minSize=MIN_COLUMN_WIDTH),
     ]
     self.w.top = SplitView("auto", panes)
-
-
     self.w.addGlyphs = Button(
       "auto",
       "Add selected glyphs",
@@ -140,7 +140,6 @@ class TalkingLeaves:
       callback=self.addGlyphsCallback,
     )
     self.w.flex = Group("auto")
-
     rules = [
       "H:|[top]|",
       "H:|-[flex(>=pad)]-gap-[showSupported]-gap-[showUnsupported]-gap-[addGlyphs]-pad-|",
@@ -152,11 +151,23 @@ class TalkingLeaves:
     metrics = dict(pad=8,gap=8)
     self.w.addAutoPosSizeRules(rules,metrics)
 
+    # Open GUI
     self.w.open()
 
     # Pane widths don't work when SplitView is in auto layout
     # Divider position has to be set after opening window
     self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260,0)
+
+
+  def fillTables(self):
+    scripts = self.list2TableFrom2dArray_Headers_(
+      self.scriptsData.items(),
+      self.scriptsColHeaders,
+    )
+    self.scriptsTable.set(scripts)
+    self.langsTable.set(self.hgFindLanguagesByScript_(self.defaultScript))
+
+    # Fix some UI details…
 
     # This triggers selectionCallback, which can't be done at instantiation
     # time, or it will refresh langTable which doesn't exist yet.
@@ -166,6 +177,7 @@ class TalkingLeaves:
     # Tables begin scrolled to 2nd row for some reason
     self.scriptsTable.getNSTableView().scrollRowToVisible_(0)
     self.langsTable.getNSTableView().scrollRowToVisible_(0)
+
 
   def hgFindLanguagesByScript_(self, script):
     charset = [g.string for g in self.font.glyphs if g.unicode]
@@ -198,7 +210,7 @@ class TalkingLeaves:
 
     return items
 
-  def _hgFindScriptsAndSpeakers(self):
+  def getScriptsAndSpeakers(self):
     '''
     Initialize lists of scripts
     '''
@@ -212,31 +224,17 @@ class TalkingLeaves:
           scripts.append(ortho['script'])
           speakers[ortho['script']] = 0
         speakers[ortho['script']] += lang.get('speakers',0)
+    return dict(sorted(speakers.items(),key=lambda x:x[1],reverse=True))
 
-    self.scripts = scripts
-    self.speakersByScriptDesc = dict(sorted(speakers.items(),key=lambda x:x[1],reverse=True))
-
-  def list2TableFrom2dArray_Headers_(self, array, headers, headerWidths=[], minWidthDefault=MIN_COLUMN_WIDTH):
-
-    columnDescriptions = [
-      dict(identifier=h,title=h)
-      for h in headers
-    ]
-    for i,width in enumerate(headerWidths):
-      columnDescriptions[i]['width'] = width
-
-    for columnDescription in columnDescriptions:
-      columnDescription['minWidth'] = minWidthDefault
-
+  def list2TableFrom2dArray_Headers_(self, array, columnDescriptions):
     items = []
     for row in array:
       items.append({})
       for i,col in enumerate(row):
-        items[-1][headers[i]] = col
+        items[-1][columnDescriptions[i]['identifier']] = col
+    return items
 
-    return items, columnDescriptions
-
-  def _loadLangs(self, sender):
+  def loadLangs(self, sender):
     if hasattr(self,'scriptsTable'):
       script = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
     else:
@@ -305,13 +303,13 @@ class TalkingLeaves:
     pass
 
   def showUnsupportedCallback(self, sender):
-    self._loadLangs(sender)
+    self.loadLangs(sender)
 
   def showSupportedCallback(self, sender):
-    self._loadLangs(sender)
+    self.loadLangs(sender)
 
   def refreshLangs(self, sender):
-    self._loadLangs(sender)
+    self.loadLangs(sender)
 
 class charList(str):
   '''

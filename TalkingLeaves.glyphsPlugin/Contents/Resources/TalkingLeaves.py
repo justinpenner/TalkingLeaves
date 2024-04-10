@@ -25,6 +25,11 @@ try:
 except ModuleNotFoundError:
   hyperglot = None
 
+try:
+  from urlreader import URLReader
+except ModuleNotFoundError:
+  URLReader = None
+
 MIN_COLUMN_WIDTH = 20
 
 def main():
@@ -51,6 +56,8 @@ class TalkingLeaves:
     self.defaultScriptIndex = 0
     self.defaultScript = self.scripts[self.defaultScriptIndex]
     self.fillTables()
+
+    self.checkForHyperglotUpdates()
 
   def startGUI(self):
 
@@ -311,6 +318,24 @@ class TalkingLeaves:
   def refreshLangs(self, sender):
     self.loadLangs(sender)
 
+  def checkForHyperglotUpdates(self):
+    url = ('https://api.github.com/repos/rosettatype/hyperglot/releases')
+    def callback(url, data, error):
+      if url and data and not error:
+        releases = json.loads(data.decode('utf-8'))
+        if releases[0]['tag_name'] == hyperglot.__version__:
+          import sys
+          if sys.executable.split('/')[-1] == 'Glyphs 3':
+            message = f"Hyperglot {releases[0]['tag_name']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\n~/Library/Application\ Support/Glyphs\ 3/Repositories/GlyphsPythonPlugin/Python.framework/Versions/Current/bin/pip3 install --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" -U hyperglot"
+          else:
+            message = f"Hyperglot {releases[0]['tag_name']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip install -U hyperglot\n\nHint: make sure Glyphs is running the same Python as your pip command."
+          Message(
+            message,
+            title='Update available',
+            OKButton='Dismiss',
+          )
+    URLReader().fetch(url, callback)
+
 class charList(str):
   '''
   A list of chars that acts like a string, but sorts by the list length.
@@ -329,15 +354,6 @@ class charList(str):
 
   def listLen(self):
     return len(self.l)
-
-def checkForHyperglotUpdates():
-  url = NSURL.URLWithString_('https://api.github.com/repos/rosettatype/hyperglot/releases')
-  r = NSData.dataWithContentsOfURL_(url)
-
-  releases = json.loads(r.decode('utf-8'))
-
-  if releases[0]['tag_name'] != hyperglot.__version__:
-    raise Exception('Please upgrade Hyperglot, then restart Glyphs.\npython3.10 -m pip install --upgrade --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" hyperglot')
 
 if __name__ == '__main__':
   main()

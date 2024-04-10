@@ -12,7 +12,7 @@ TalkingLeaves requires a few Python modules. First, check *Glyphs > Preferences 
 
 Open Terminal and paste this absurdly long command to install Hyperglot's Python module. The first part of the command is the direct path to pip in the GlyphsPython module, then we are targeting it to install in another location where Glyphs looks for Python modules.
 
-	~/Library/Application\ Support/Glyphs\ 3/Repositories/GlyphsPythonPlugin/Python.framework/Versions/Current/bin/pip3 install --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" -U hyperglot
+	~/Library/Application\ Support/Glyphs\ 3/Repositories/GlyphsPythonPlugin/Python.framework/Versions/Current/bin/pip3 install --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" -U hyperglot urlreader
 
 Run that command again later if you want to upgrade to the newest version of Hyperglot.
 
@@ -22,7 +22,7 @@ We also need Vanilla, but Glyphs should prompt you to install it if it isn't alr
 
 If you're using one of these Python versions, you're probably familiar with `pip` already. You'll need to install these requirements if you don't already have them:
 
-	pip install -U hyperglot cocoa-vanilla
+	pip install -U hyperglot cocoa-vanilla urlreader
 
 You might be able to skip installing `cocoa-vanilla` if the Vanilla module is already installed in Glyphs. Even though you're running an external Python in Glyphs, plugins can still use modules installed within Glyphs.
 

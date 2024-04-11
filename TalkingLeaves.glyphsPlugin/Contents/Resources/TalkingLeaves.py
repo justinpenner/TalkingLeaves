@@ -242,7 +242,7 @@ class TalkingLeaves:
         if (len(unsupported)>=1 and self.w.showUnsupported.get()) \
         or (len(unsupported)==0 and self.w.showSupported.get()):
           items.append({
-            'Language': lang['name'],
+            'Language': lang.get('preferred_name',lang['name']),
             'Speakers': langYaml.get('speakers',-1),
             'Ortho. Status': ortho.get('status',''),
             'Lang. Status': lang.get('status',''),

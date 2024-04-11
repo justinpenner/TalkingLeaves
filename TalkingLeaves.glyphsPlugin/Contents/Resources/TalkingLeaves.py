@@ -70,7 +70,7 @@ class TalkingLeaves:
         width=100,
       ),
       dict(
-        title='Speakers',
+        title='L1 Speakers',
         width=100,
       ),
     ]
@@ -80,7 +80,7 @@ class TalkingLeaves:
         width=160,
       ),
       dict(
-        title='Speakers',
+        title='L1 Speakers',
         width=100,
         valueToCellConverter=self.langSpeakersValue_ToCell,
       ),
@@ -243,7 +243,7 @@ class TalkingLeaves:
         or (len(unsupported)==0 and self.w.showSupported.get()):
           items.append({
             'Language': lang.get('preferred_name',lang['name']),
-            'Speakers': langYaml.get('speakers',-1),
+            'L1 Speakers': langYaml.get('speakers',-1),
             'Ortho. Status': ortho.get('status',''),
             'Lang. Status': lang.get('status',''),
             'Missing': charList(unsupported),
@@ -310,7 +310,7 @@ class TalkingLeaves:
     # Spent far too much time trying to figure this out. Next thing to try:
     # https://github.com/robotools/vanilla/issues/91
 
-    # colIdx = self.langsTable.getNSTableView().columnWithIdentifier_('Speakers')
+    # colIdx = self.langsTable.getNSTableView().columnWithIdentifier_('L1 Speakers')
     # col = self.langsTable.getNSTableView().tableColumns()[colIdx]
     # print(col)
     # col.headerCell().setTextColor_(NSColor.placeholderTextColor())

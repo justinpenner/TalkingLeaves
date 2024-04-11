@@ -7,7 +7,7 @@ Developers: this script (TalkingLeaves.py) can be run directly from within Glyph
 
 from GlyphsApp import *
 from vanilla import (
-  Window, Group, List2, Button, HelpButton, SplitView, CheckBox
+  Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox
 )
 import json
 from Foundation import NSURL, NSData
@@ -55,6 +55,7 @@ class TalkingLeaves:
     self.hgYaml = dict(hyperglot.languages.Languages())
     self.scriptsData = self.getScriptsAndSpeakers()
     self.scripts = list(self.scriptsData.keys())
+    self.langsPerScript = {}
     self.defaultScriptIndex = 0
     self.defaultScript = self.scripts[self.defaultScriptIndex]
     self.fillTables()
@@ -136,6 +137,7 @@ class TalkingLeaves:
       [],
       columnDescriptions=self.langsColHeaders,
       enableTypingSensitivity=True,
+      selectionCallback=self.langsSelectionCallback,
     )
     panes = [
       dict(view=self.scriptsTable,identifier="scripts",canCollapse=False,minSize=MIN_COLUMN_WIDTH),
@@ -152,17 +154,25 @@ class TalkingLeaves:
       "auto",
       callback=self.openRepoCallback,
     )
+    self.w.statusBar = TextBox(
+      "auto",
+      text="",
+      sizeStyle="regular",
+      alignment="natural",
+      selectable=True,
+    )
     self.w.flex = Group("auto")
     rules = [
       "H:|[top]|",
-      "H:|-pad-[openRepo]-[flex(>=pad)]-gap-[showSupported]-gap-[showUnsupported]-gap-[addGlyphs]-pad-|",
-      "V:|[top]-pad-[openRepo]-pad-|",
+      "H:|-pad-[statusBar]-gap-[flex(>=pad)]-gap-[showSupported]-gap-[showUnsupported]-gap-[addGlyphs]-gap-[openRepo]-gap-|",
+      "V:|[top]-pad-[statusBar]-pad-|",
       "V:|[top]-pad-[flex]-pad-|",
       "V:|[top]-pad-[showSupported]-pad-|",
       "V:|[top]-pad-[showUnsupported]-pad-|",
       "V:|[top]-pad-[addGlyphs]-pad-|",
+      "V:|[top]-pad-[openRepo]-pad-|",
     ]
-    metrics = dict(pad=8,gap=8)
+    metrics = dict(pad=12,gap=16)
     self.w.addAutoPosSizeRules(rules,metrics)
 
     # Open GUI
@@ -199,14 +209,13 @@ class TalkingLeaves:
     langCodes = self.hg.keys()
 
     items = []
-    for langCode in langCodes:
 
-      # if langCode == 'fub':
-        # print(self.hgYaml[langCode])
-        # print(self.hg.get(langCode))
-        # ace = self.hg.ace
-        # print(dict(getattr(self.hg,langCode)))
-        # print(ace)
+    self.langsPerScript[script] = 0
+
+    self.currentScriptUnsupported = 0
+    self.currentScriptSupported = 0
+
+    for langCode in langCodes:
 
       langYaml = self.hgYaml[langCode]
       lang = getattr(self.hg,langCode)
@@ -218,16 +227,25 @@ class TalkingLeaves:
       orthos = [o for o in lang['orthographies']
         if o['script'] == script
       ]
+
+      if len(orthos):
+        self.langsPerScript[script] += len(orthos)
+
       for ortho in orthos:
         base = list(set(ortho['base']))
         unsupported = [c for c in base if c not in charset]
+        if len(unsupported):
+          self.currentScriptUnsupported += 1
+        else:
+          self.currentScriptSupported += 1
+
         if (len(unsupported)>=1 and self.w.showUnsupported.get()) \
         or (len(unsupported)==0 and self.w.showSupported.get()):
           items.append({
             'Language': lang['name'],
             'Speakers': langYaml.get('speakers',-1),
             'Ortho. Status': ortho.get('status',''),
-            'Lang. Status': langYaml.get('status',''),
+            'Lang. Status': lang.get('status',''),
             'Missing': charList(unsupported),
           })
     items = sorted(items,key=lambda x:len(x['Missing']))
@@ -244,7 +262,6 @@ class TalkingLeaves:
       orthos = lang.get('orthographies',[])
       for ortho in orthos:
         if ortho['script'] not in scripts:
-          # scripts[ortho['script']] = 0
           scripts.append(ortho['script'])
           speakers[ortho['script']] = 0
         speakers[ortho['script']] += lang.get('speakers',0)
@@ -260,13 +277,30 @@ class TalkingLeaves:
 
   def loadLangs(self, sender):
     if hasattr(self,'scriptsTable'):
-      script = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
+      self.currentScript = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
     else:
-      script = self.defaultScript
+      self.currentScript = self.defaultScript
 
-    items = self.hgFindLanguagesByScript_(script)
+    items = self.hgFindLanguagesByScript_(self.currentScript)
     self.langsTable.set(items)
     self.langsFormatting()
+    self.updateStatusBar()
+
+  def updateStatusBar(self):
+    m = "{supported}/{total}={percent}% {script} supported".format(
+      script=self.currentScript,
+      total=self.langsPerScript[self.currentScript],
+      unsupported=self.currentScriptUnsupported,
+      supported=self.currentScriptSupported,
+      percent=self.currentScriptSupported*100//self.langsPerScript[self.currentScript],
+    )
+    langSel = len(self.langsTable.getSelectedIndexes())
+    if langSel:
+      m += " ({langs} langs, {chars} missing chars selected)".format(
+        langs=langSel,
+        chars=len(self.selectedChars),
+      )
+    self.w.statusBar.set(m)
 
   def langsFormatting(self):
     # TODO
@@ -324,7 +358,11 @@ class TalkingLeaves:
     tab.setTitle_("New glyphs added")
 
   def langsSelectionCallback(self, sender):
-    pass
+    self.selectedChars = []
+    for i in self.langsTable.getSelectedIndexes():
+      self.selectedChars.extend(self.langsTable.get()[i]['Missing'].split())
+    self.selectedChars = set(self.selectedChars)
+    self.updateStatusBar()
 
   def showUnsupportedCallback(self, sender):
     self.loadLangs(sender)

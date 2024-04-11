@@ -2,17 +2,17 @@
 # -*- coding: utf-8 -*-
 
 __doc__='''
-TalkingLeaves is a tool for exploring languages that your font doesn't support yet.
-This script (TalkingLeaves.py) can also be run directly from within Glyphs, if you put it in one of your Scripts folders.
+Developers: this script (TalkingLeaves.py) can be run directly from within Glyphs. In your Scripts folder, add an alias to the TalkingLeaves parent folder. Then you don't have to restart Glyphs each time you make changes to this file, like you normally do when you're developing a plugin.
 '''
 
 from GlyphsApp import *
 from vanilla import (
-  Window, Group, List2, Button, PopUpButton, SplitView, CheckBox
+  Window, Group, List2, Button, HelpButton, SplitView, CheckBox
 )
 import json
 from Foundation import NSURL, NSData
 
+# Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
   import sys
   PKGS_PATH = '~/Library/Application Support/Glyphs 3/Scripts/site-packages'
@@ -22,6 +22,7 @@ if Glyphs.versionNumber < 3.2:
 try:
   import hyperglot
   import hyperglot.languages
+  import hyperglot.language
 except ModuleNotFoundError:
   hyperglot = None
 
@@ -51,6 +52,7 @@ class TalkingLeaves:
     self.startGUI()
 
     self.hg = hyperglot.languages.Languages()
+    self.hgYaml = dict(hyperglot.languages.Languages())
     self.scriptsData = self.getScriptsAndSpeakers()
     self.scripts = list(self.scriptsData.keys())
     self.defaultScriptIndex = 0
@@ -146,10 +148,15 @@ class TalkingLeaves:
       sizeStyle="regular",
       callback=self.addGlyphsCallback,
     )
+    self.w.openRepo = HelpButton(
+      "auto",
+      callback=self.openRepoCallback,
+    )
     self.w.flex = Group("auto")
     rules = [
       "H:|[top]|",
-      "H:|-[flex(>=pad)]-gap-[showSupported]-gap-[showUnsupported]-gap-[addGlyphs]-pad-|",
+      "H:|-pad-[openRepo]-[flex(>=pad)]-gap-[showSupported]-gap-[showUnsupported]-gap-[addGlyphs]-pad-|",
+      "V:|[top]-pad-[openRepo]-pad-|",
       "V:|[top]-pad-[flex]-pad-|",
       "V:|[top]-pad-[showSupported]-pad-|",
       "V:|[top]-pad-[showUnsupported]-pad-|",
@@ -194,11 +201,21 @@ class TalkingLeaves:
     items = []
     for langCode in langCodes:
 
+      # if langCode == 'fub':
+        # print(self.hgYaml[langCode])
+        # print(self.hg.get(langCode))
+        # ace = self.hg.ace
+        # print(dict(getattr(self.hg,langCode)))
+        # print(ace)
+
+      langYaml = self.hgYaml[langCode]
+      lang = getattr(self.hg,langCode)
+
       # Skip languages that don't have any orthographies listed
-      if 'orthographies' not in self.hg[langCode]:
+      if 'orthographies' not in lang:
         continue
 
-      orthos = [o for o in self.hg[langCode]['orthographies']
+      orthos = [o for o in lang['orthographies']
         if o['script'] == script
       ]
       for ortho in orthos:
@@ -207,10 +224,10 @@ class TalkingLeaves:
         if (len(unsupported)>=1 and self.w.showUnsupported.get()) \
         or (len(unsupported)==0 and self.w.showSupported.get()):
           items.append({
-            'Language': self.hg[langCode]['name'],
-            'Speakers': self.hg[langCode].get('speakers',-1),
+            'Language': lang['name'],
+            'Speakers': langYaml.get('speakers',-1),
             'Ortho. Status': ortho.get('status',''),
-            'Lang. Status': self.hg[langCode].get('status',''),
+            'Lang. Status': langYaml.get('status',''),
             'Missing': charList(unsupported),
           })
     items = sorted(items,key=lambda x:len(x['Missing']))
@@ -318,12 +335,21 @@ class TalkingLeaves:
   def refreshLangs(self, sender):
     self.loadLangs(sender)
 
+  def openRepoCallback(self, sender):
+    import webbrowser
+    b = webbrowser.get('firefox')
+    b.open('https://github.com/justinpenner/TalkingLeaves')
+
   def checkForHyperglotUpdates(self):
+    if URLReader == None:
+      print("urlreader is missing! Check README.md for instructions to install it. TalkingLeaves will work without it, but it won't be able to notify you when Hyperglot updates are available.")
+      return
+
     url = ('https://api.github.com/repos/rosettatype/hyperglot/releases')
     def callback(url, data, error):
       if url and data and not error:
         releases = json.loads(data.decode('utf-8'))
-        if releases[0]['tag_name'] == hyperglot.__version__:
+        if releases[0]['tag_name'] != hyperglot.__version__:
           import sys
           if sys.executable.split('/')[-1] == 'Glyphs 3':
             message = f"Hyperglot {releases[0]['tag_name']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\n~/Library/Application\ Support/Glyphs\ 3/Repositories/GlyphsPythonPlugin/Python.framework/Versions/Current/bin/pip3 install --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" -U hyperglot"

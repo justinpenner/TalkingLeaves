@@ -337,8 +337,7 @@ class TalkingLeaves:
 
   def openRepoCallback(self, sender):
     import webbrowser
-    b = webbrowser.get('firefox')
-    b.open('https://github.com/justinpenner/TalkingLeaves')
+    webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
 
   def checkForHyperglotUpdates(self):
     if URLReader == None:

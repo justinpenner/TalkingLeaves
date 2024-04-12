@@ -37,6 +37,11 @@ def main():
 
   Glyphs.clearLog()
   print("Running as script…")
+
+  if len(Glyphs.documents) == 0:
+    Message("Please open a font before running TalkingLeaves.", title='Cannot load TalkingLeaves', OKButton="OK")
+    return
+
   TalkingLeaves()
 
 class TalkingLeaves:

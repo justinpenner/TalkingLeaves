@@ -1,8 +1,8 @@
-# TalkingLeaves
+# 🍃 TalkingLeaves
 
 TalkingLeaves is a [GlyphsApp](https://glyphsapp.com/) plugin to explore the world's languages and writing systems. It also comes with useful features to show you what languages your font already supports, and which glyphs are needed to support more languages.
 
-![](screenshot.png)
+![Screenshot of the TalkingLeaves plugin window](screenshot.png)
 
 ## What else can it do?
 
@@ -12,7 +12,7 @@ TalkingLeaves can help you understand the range of writing systems and character
 * Which writing system has the smallest population of native speakers? *(Answer: Cherokee)*
 * What are some minority scripts that are used by a relatively large number of languages? *(Answer: Geʽez, also known as the Ethopic script, is a great example of this)*
 
-Those answers, of course, may change and grow as more languages are added to the Hyperglot database.
+Those answers, of course, may change and grow as more languages are added to the [Hyperglot](https://github.com/rosettatype/hyperglot/) database, which powers TalkingLeaves.
 
 ## What does "Talking Leaves" mean?
 
@@ -20,39 +20,28 @@ Those answers, of course, may change and grow as more languages are added to the
 
 ## Installation
 
-TalkingLeaves requires a few Python modules. We'll use `pip` to install them, but first, we need to check *Glyphs > Preferences > Addons* to see which Python environment your Glyphs is currently using:
+### Requirements
 
-![](install-check-python-dist.png)
+* Python's `pip3` package manager.
+* Hyperglot and URLReader, installed via `pip3` using the command in the instructions below.
 
-### Option A: Python 3.xx (Glyphs)
+> 💡 You can install the latest Python via [Python.org](https://www.python.org/), or use a package manager such as [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/).
 
-Open Terminal and paste this absurdly long command to install Hyperglot's Python module. The first part of the command is the direct path to `pip` in the GlyphsPython module, then we are targeting it to install in another location where Glyphs looks for Python modules.
+### Install dependencies
 
-	alias glyphspip="~/Library/Application\ Support/Glyphs\ 3/Repositories/GlyphsPythonPlugin/Python.framework/Versions/Current/bin/pip3"
+Open Terminal and run the following command. **Replace "3.11.6" with your Python version number from _Glyphs > Preferences > Addons_**.
 
-	glyphspip install --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" -U hyperglot urlreader
+	pip3 install --python-version=3.11.6 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot urlreader pyobjc cocoa-vanilla
 
-Run that command again later if you want to upgrade to the newest version of Hyperglot.
+### Install TalkingLeaves plugin
 
-We also need Vanilla, but Glyphs should prompt you to install it if it isn't already. You can also install it from *Window > Plugin Manager > Modules*.
-
-### Option B: Python 3.xx (Homebrew/Python.org/etc)
-
-If you're using one of these Python versions, you're probably familiar with `pip` already. You'll need to install these requirements if you don't already have them:
-
-	pip install -U hyperglot cocoa-vanilla urlreader
-	
-If you have multiple Python versions installed, check `pip show hyperglot` to make sure the packages were installed in the right one. Otherwise you might need to use a version-specific pip command like `pip3.12`.
-
-### TalkingLeaves plugin
-
-Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock. Glyphs will ask you to confirm the install, then you can restart Glyphs to begin using TalkingLeaves. Open a font, then open TalkingLeaves via the Window menu (or ⌥⌘T).
+Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock. Glyphs will ask you to confirm the install, then you can restart Glyphs to begin using TalkingLeaves. Open a font, then open TalkingLeaves via the Window menu or ⌥⌘T.
 
 ## Contributing
 
-The database of languages that powers TalkingLeaves comes from Hyperglot, an open-source project by Rosetta Type. If you want to contribute, see https://github.com/rosettatype/hyperglot/.
-
 To report bugs or request features for TalkingLeaves, please file an [issue](https://github.com/justinpenner/TalkingLeaves/issues), or send me an email.
+
+The database of languages that powers TalkingLeaves comes from Hyperglot, an open-source project by Rosetta Type. If you want to contribute, see [https://github.com/rosettatype/hyperglot/](https://github.com/rosettatype/hyperglot/)
 
 ## Related resources
 

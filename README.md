@@ -25,13 +25,20 @@ Those answers, of course, may change and grow as more languages are added to the
 * Python's `pip3` package manager.
 * Hyperglot and URLReader, installed via `pip3` using the command in the instructions below.
 
-> 💡 You can install the latest Python via [Python.org](https://www.python.org/), or use a package manager such as [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/).
+> [!TIP]
+> You can install the latest Python via [Python.org](https://www.python.org/), or use a package manager such as [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/).
 
 ### Install dependencies
 
-Open Terminal and run the following command. **Replace "3.11.6" with your Python version number from _Glyphs > Preferences > Addons_**.
+> [!IMPORTANT]
+> Replace `3.11.6` with your Python version number from _Glyphs > Preferences > Addons_.
 
 	pip3 install --python-version=3.11.6 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot urlreader pyobjc cocoa-vanilla
+
+> [!NOTE]
+> * `--python-version` tells pip to find packages for the Python version that you're using in Glyphs.
+> * `--only-binary` disallows source packages and is required when using `--python-version`.
+> * `--target` installs the packages in a Glyphs-only location, which keeps them out of your `pip list`.
 
 ### Install TalkingLeaves plugin
 

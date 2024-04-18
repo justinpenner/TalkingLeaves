@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 
 __doc__='''
-Developers: this script (TalkingLeaves.py) can be run directly from within Glyphs. In your Scripts folder, add an alias to the TalkingLeaves parent folder. Then you don't have to restart Glyphs each time you make changes to this file, like you normally do when you're developing a plugin.
+Developers: this script (TalkingLeaves.py) can be run directly from within
+Glyphs. In your Scripts folder, add an alias to the TalkingLeaves parent
+folder. Then you don't have to restart Glyphs each time you make changes to
+this file, like you normally do when you're developing a plugin.
 '''
 
 from GlyphsApp import *
@@ -90,7 +93,7 @@ class TalkingLeaves:
       dict(
         title='L1 Speakers',
         width=100,
-        valueToCellConverter=self.langSpeakersValue_ToCell,
+        valueToCellConverter=self.langSpeakersValue_toCell,
       ),
       dict(
         title='Ortho. Status',
@@ -99,11 +102,11 @@ class TalkingLeaves:
       dict(
         title='Lang. Status',
         width=94,
-        valueToCellConverter=self.langStatusValue_ToCell,
+        valueToCellConverter=self.langStatusValue_toCell,
       ),
       dict(
         title='Missing',
-        valueToCellConverter=self.missingValue_ToCell,
+        valueToCellConverter=self.missingValue_toCell,
       ),
     ]
     for colHeader in self.scriptsColHeaders + self.langsColHeaders:
@@ -192,7 +195,7 @@ class TalkingLeaves:
 
 
   def fillTables(self):
-    scripts = self.list2TableFrom2dArray_Headers_(
+    scripts = self.list2TableFrom2dArray_headers_(
       self.scriptsData.items(),
       self.scriptsColHeaders,
     )
@@ -275,7 +278,7 @@ class TalkingLeaves:
         speakers[ortho['script']] += lang.get('speakers',0)
     return dict(sorted(speakers.items(),key=lambda x:x[1],reverse=True))
 
-  def list2TableFrom2dArray_Headers_(self, array, columnDescriptions):
+  def list2TableFrom2dArray_headers_(self, array, columnDescriptions):
     items = []
     for row in array:
       items.append({})
@@ -332,19 +335,19 @@ class TalkingLeaves:
     #   print(d)
     pass
 
-  def langSpeakersValue_ToCell(self, value):
+  def langSpeakersValue_toCell(self, value):
     if value == -1:
       return "(no data)"
     else:
       return value
 
-  def langStatusValue_ToCell(self, value):
+  def langStatusValue_toCell(self, value):
     if value == "":
       return "(no data)"
     else:
       return value
 
-  def missingValue_ToCell(self, value):
+  def missingValue_toCell(self, value):
     if value == "":
       return "(complete)"
     else:

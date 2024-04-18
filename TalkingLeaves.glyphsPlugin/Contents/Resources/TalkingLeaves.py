@@ -15,9 +15,12 @@ from Foundation import NSURL, NSData
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
   import sys
-  PKGS_PATH = '~/Library/Application Support/Glyphs 3/Scripts/site-packages'
+  from pathlib import Path
+  PKGS_PATH = str(Path('~/Library/Application Support/Glyphs 3/Scripts/site-packages').expanduser())
   if PKGS_PATH not in sys.path:
-    sys.path.append(PKGS_PATH)
+    scriptsPath = str(Path('~/Library/Application Support/Glyphs 3/Scripts').expanduser())
+    pos = sys.path.index(scriptsPath)+1
+    sys.path.insert(pos,PKGS_PATH)
 
 try:
   import hyperglot

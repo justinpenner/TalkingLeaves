@@ -66,7 +66,7 @@ class TalkingLeaves:
     self.hgYaml = dict(hyperglot.languages.Languages())
     self.scriptsData = self.getScriptsAndSpeakers()
     self.scripts = list(self.scriptsData.keys())
-    self.langsPerScript = {}
+    self.scriptsLangCount = {}
     self.defaultScriptIndex = 0
     self.defaultScript = self.scripts[self.defaultScriptIndex]
     self.fillTables()
@@ -193,14 +193,13 @@ class TalkingLeaves:
     # Divider position has to be set after opening window
     self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260,0)
 
-
   def fillTables(self):
     scripts = self.list2TableFrom2dArray_headers_(
       self.scriptsData.items(),
       self.scriptsColHeaders,
     )
     self.scriptsTable.set(scripts)
-    self.langsTable.set(self.hgFindLanguagesByScript_(self.defaultScript))
+    self.langsTable.set(self.hgFindLangsByScript_(self.defaultScript))
 
     # Fix some UI details…
 
@@ -213,15 +212,14 @@ class TalkingLeaves:
     self.scriptsTable.getNSTableView().scrollRowToVisible_(0)
     self.langsTable.getNSTableView().scrollRowToVisible_(0)
 
-
-  def hgFindLanguagesByScript_(self, script):
+  def hgFindLangsByScript_(self, script):
     charset = [g.string for g in self.font.glyphs if g.unicode]
 
     langCodes = self.hg.keys()
 
     items = []
 
-    self.langsPerScript[script] = 0
+    self.scriptsLangCount[script] = 0
 
     self.currentScriptUnsupported = 0
     self.currentScriptSupported = 0
@@ -240,7 +238,7 @@ class TalkingLeaves:
       ]
 
       if len(orthos):
-        self.langsPerScript[script] += len(orthos)
+        self.scriptsLangCount[script] += len(orthos)
 
       for ortho in orthos:
         base = list(set(ortho['base']))
@@ -292,7 +290,7 @@ class TalkingLeaves:
     else:
       self.currentScript = self.defaultScript
 
-    items = self.hgFindLanguagesByScript_(self.currentScript)
+    items = self.hgFindLangsByScript_(self.currentScript)
     self.langsTable.set(items)
     self.langsFormatting()
     self.updateStatusBar()
@@ -300,10 +298,10 @@ class TalkingLeaves:
   def updateStatusBar(self):
     m = "{supported}/{total}={percent}% {script} supported".format(
       script=self.currentScript,
-      total=self.langsPerScript[self.currentScript],
+      total=self.scriptsLangCount[self.currentScript],
       unsupported=self.currentScriptUnsupported,
       supported=self.currentScriptSupported,
-      percent=self.currentScriptSupported*100//self.langsPerScript[self.currentScript],
+      percent=self.currentScriptSupported*100//self.scriptsLangCount[self.currentScript],
     )
     langSel = len(self.langsTable.getSelectedIndexes())
     if langSel:
@@ -393,16 +391,15 @@ class TalkingLeaves:
       print("urlreader is missing! Check README.md for instructions to install it. TalkingLeaves will work without it, but it won't be able to notify you when Hyperglot updates are available.")
       return
 
-    url = ('https://api.github.com/repos/rosettatype/hyperglot/releases')
+    url = ('https://pypi.org/pypi/hyperglot/json')
     def callback(url, data, error):
       if url and data and not error:
-        releases = json.loads(data.decode('utf-8'))
-        if releases[0]['tag_name'] != hyperglot.__version__:
+        metadata = json.loads(data.decode('utf-8'))
+        print(metadata['info']['version'], hyperglot.__version__)
+        if metadata['info']['version'] != hyperglot.__version__:
           import sys
-          if sys.executable.split('/')[-1] == 'Glyphs 3':
-            message = f"Hyperglot {releases[0]['tag_name']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\n~/Library/Application\ Support/Glyphs\ 3/Repositories/GlyphsPythonPlugin/Python.framework/Versions/Current/bin/pip3 install --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" -U hyperglot"
-          else:
-            message = f"Hyperglot {releases[0]['tag_name']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip install -U hyperglot\n\nHint: make sure Glyphs is running the same Python as your pip command."
+          pythonVersion = '.'.join([str(x) for x in sys.version_info][:3])
+          message = f"Hyperglot {metadata['info']['version']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip3 install --python-version={pythonVersion} --only-binary=:all: --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" --upgrade hyperglot\n\nThen, restart Glyphs."
           Message(
             message,
             title='Update available',

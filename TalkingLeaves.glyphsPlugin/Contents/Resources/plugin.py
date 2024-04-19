@@ -8,10 +8,6 @@ import objc
 from GlyphsApp import *
 from GlyphsApp.plugins import *
 from TalkingLeaves import *
-try:
-  import hyperglot
-except ModuleNotFoundError:
-  hyperglot = None
 
 class TalkingLeavesPlugin(GeneralPlugin):
 

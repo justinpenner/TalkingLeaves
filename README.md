@@ -43,9 +43,19 @@ Install Python via [Python.org](https://www.python.org/), or use a package manag
 
 Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock. Glyphs will ask you to confirm the install, then you can restart Glyphs to begin using TalkingLeaves. Open a font, then open TalkingLeaves via the Window menu or ⌥⌘T.
 
+## Roadmap
+
+* Make installing dependencies easier for less-technical users.
+* Add information about unencoded/alternate glyphs that may be required for some languages (complex scripts, local forms).
+* Build TalkingLeaves plugins for other font editors, and possibly a web interface (contact me if you’re interested in helping/supporting this!)
+* Add a "more data" toggle for the languages table that shows some additional data fields.
+* Highlight glyphs in the "Missing" column that are composites and are composable from the user's existing glyph set.
+* Add more language data sources, such as shaperglot/gflanguages.
+* Consider other ways of visualizing and navigating through languages, instead of by script, such as by region or by language family.
+
 ## Contributing
 
-To report bugs or request features for TalkingLeaves, please file an [issue](https://github.com/justinpenner/TalkingLeaves/issues), or send me an email.
+If you have any ideas, bug reports, or other requests, I would love to hear them! You can file an [issue](https://github.com/justinpenner/TalkingLeaves/issues), or send me an email or a DM. You can find various ways to contact me at [justinpenner.ca](https://justinpenner.ca/).
 
 The database of languages that powers TalkingLeaves comes from Hyperglot, an open-source project by Rosetta Type. If you want to contribute, see [https://github.com/rosettatype/hyperglot/](https://github.com/rosettatype/hyperglot/)
 

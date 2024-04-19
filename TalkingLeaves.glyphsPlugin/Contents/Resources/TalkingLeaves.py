@@ -14,6 +14,7 @@ from vanilla import (
 )
 import json
 from Foundation import NSURL, NSData
+import webbrowser
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
@@ -45,7 +46,7 @@ def main():
   print("Running as script…")
 
   if len(Glyphs.documents) == 0:
-    Message("Please open a font before running TalkingLeaves.", title='Cannot load TalkingLeaves', OKButton="OK")
+    Message("Please open a font before running TalkingLeaves.", title='Cannot load TalkingLeaves', OKButton="Dismiss")
     return
 
   TalkingLeaves()
@@ -55,7 +56,14 @@ class TalkingLeaves:
   def __init__(self):
 
     if not hyperglot:
-      Message("Hyperglot module is missing. Follow the installation instructions in README.md.", title='Cannot load TalkingLeaves', OKButton="OK")
+      from vanilla import dialogs
+      answer = dialogs.ask(
+        messageText='Hyperglot module is missing',
+        informativeText='Follow the installation instructions at https://github.com/justinpenner/TalkingLeaves#installation',
+        buttonTitles=[(f'Open in browser',1),('Cancel',0)],
+      )
+      if answer:
+        webbrowser.open('https://github.com/justinpenner/TalkingLeaves#installation')
       return
 
     self.font = Glyphs.font
@@ -194,6 +202,7 @@ class TalkingLeaves:
     self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260,0)
 
   def fillTables(self):
+
     scripts = self.list2TableFrom2dArray_headers_(
       self.scriptsData.items(),
       self.scriptsColHeaders,
@@ -213,14 +222,11 @@ class TalkingLeaves:
     self.langsTable.getNSTableView().scrollRowToVisible_(0)
 
   def hgFindLangsByScript_(self, script):
+
     charset = [g.string for g in self.font.glyphs if g.unicode]
-
     langCodes = self.hg.keys()
-
     items = []
-
     self.scriptsLangCount[script] = 0
-
     self.currentScriptUnsupported = 0
     self.currentScriptSupported = 0
 
@@ -383,7 +389,6 @@ class TalkingLeaves:
     self.loadLangs(sender)
 
   def openRepoCallback(self, sender):
-    import webbrowser
     webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
 
   def checkForHyperglotUpdates(self):

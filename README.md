@@ -45,13 +45,13 @@ Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock.
 
 ## Roadmap
 
-* Make installing dependencies easier for less-technical users.
-* Add information about unencoded/alternate glyphs that may be required for some languages (complex scripts, local forms).
-* Build TalkingLeaves plugins for other font editors, and possibly a web interface (contact me if you’re interested in helping/supporting this!)
-* Add a "more data" toggle for the languages table that shows some additional data fields.
-* Highlight glyphs in the "Missing" column that are composites and are composable from the user's existing glyph set.
-* Add more language data sources, such as shaperglot/gflanguages.
-* Consider other ways of visualizing and navigating through languages, instead of by script, such as by region or by language family.
+* [ ] Make installing dependencies easier for less-technical users.
+* [ ] Add information about unencoded/alternate glyphs that may be required for some languages (complex scripts, local forms).
+* [ ] Build TalkingLeaves plugins for other font editors, and possibly a web interface (contact me if you’re interested in helping/supporting this!)
+* [ ] Add a "more data" toggle for the languages table that shows some additional data fields.
+* [ ] Highlight glyphs in the "Missing" column that are composites and are composable from the user's existing glyph set.
+* [ ] Add more language data sources, such as shaperglot/gflanguages.
+* [ ] Consider other ways of visualizing and navigating through languages, instead of by script, such as by region or by language family.
 
 ## Contributing
 

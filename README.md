@@ -1,6 +1,6 @@
 # 🍃 TalkingLeaves
 
-TalkingLeaves is a [GlyphsApp](https://glyphsapp.com/) plugin to explore the world's languages and writing systems. It also comes with useful features to show you what languages your font already supports, and which glyphs are needed to support more languages.
+TalkingLeaves is a [GlyphsApp](https://glyphsapp.com/) plugin to explore the world’s languages and writing systems. It also comes with useful features to show you what languages your font already supports, and which glyphs are needed to support more languages.
 
 ![Screenshot of the TalkingLeaves plugin window](screenshot.png)
 
@@ -10,13 +10,13 @@ TalkingLeaves can help you understand the range of writing systems and character
 
 * How many languages can a font support with only the 26 basic Latin letters? *(Answer: 103)*
 * Which writing system has the smallest population of native speakers? *(Answer: Cherokee)*
-* What are some minority scripts that are used by a relatively large number of languages? *(Answer: Geʽez, also known as the Ethopic script, is a great example of this)*
+* What are some minority scripts that are used by a relatively large number of languages? *(Answer: Geʽez, also known as the Ethiopic script, is a great example of this)*
 
 Those answers, of course, may change and grow as more languages are added to the [Hyperglot](https://github.com/rosettatype/hyperglot/) database, which powers TalkingLeaves.
 
-## What does "Talking Leaves" mean?
+## What does “Talking Leaves” mean?
 
-"Talking leaves" is a beautiful metaphor for written language – attributed to the famous Cherokee neographer Sequoyah, who was one of the only people in history to invent the first writing system for their own people. The Cherokee syllabary was enormously successful, and within a few decades Cherokee literacy went from zero to nearly 100%, surpassing the literacy rate of the surrounding European settlers. Sequoyah's work went on to inspire many more indigenous peoples to develop their own writing systems.
+“Talking leaves” is a beautiful metaphor for written language – attributed to the famous Cherokee neographer Sequoyah, who was one of the only people in history to invent the first writing system for their own people. The Cherokee syllabary was enormously successful, and within a few decades Cherokee literacy went from zero to nearly 100%, surpassing the literacy rate of the surrounding European settlers. Sequoyah’s work went on to inspire many more indigenous peoples to develop their own writing systems.
 
 ## Installation
 
@@ -32,7 +32,7 @@ Install Python via [Python.org](https://www.python.org/), or use a package manag
 	pip3 install --python-version=3.11.6 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot urlreader pyobjc cocoa-vanilla
 
 > [!NOTE]
-> * `--python-version` tells pip to find packages for the Python version that you're using in Glyphs.
+> * `--python-version` tells pip to find packages for the Python version that you’re using in Glyphs.
 > * `--only-binary` disallows source packages and is required when using `--python-version`.
 > * `--target` installs the packages in a Glyphs-only location, and keeps them out of your `pip list`.
 
@@ -51,7 +51,7 @@ The database of languages that powers TalkingLeaves comes from Hyperglot, an ope
 
 ## Related resources
 
-- [Hyperglot](https://hyperglot.rosettatype.com/) web interface to check fonts for language support, and explore Hyperglot's database of languages and writing systems.
+- [Hyperglot](https://hyperglot.rosettatype.com/) web interface to check fonts for language support, and explore Hyperglot’s database of languages and writing systems.
 - [Hyperglot @ Github](https://github.com/rosettatype/hyperglot/)
 - [Shaperglot](https://github.com/googlefonts/shaperglot/) another tool for checking language support similar to Hyperglot, but was originally initiated with the intent of checking OpenType features for languages that need more than just a minimum character set. Now Hyperglot and Shaperglot both have some ability to check OpenType features.
 - [gflanguages](https://github.com/googlefonts/lang/) the language database behind Shaperglot.

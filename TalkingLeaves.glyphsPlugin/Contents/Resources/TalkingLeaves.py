@@ -126,7 +126,7 @@ class TalkingLeaves:
     # Build GUI with Vanilla
     self.w = Window(
       self.windowSize,
-      f"Talking Leaves ({(Glyphs.currentDocument.filePath or self.font.familyName).split('/')[-1]} - {self.font.familyName})",
+      f"TalkingLeaves ({(Glyphs.currentDocument.filePath or self.font.familyName).split('/')[-1]} - {self.font.familyName})",
       minSize=(640,180),
     )
     self.scriptsTable = List2(

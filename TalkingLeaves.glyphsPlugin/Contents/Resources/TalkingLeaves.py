@@ -135,7 +135,7 @@ class TalkingLeaves:
       columnDescriptions=self.scriptsColHeaders,
       allowsMultipleSelection=False,
       enableTypingSensitivity=True,
-      selectionCallback=self.loadLangs,
+      selectionCallback=self.refreshLangs,
     )
     self.w.showSupported = CheckBox(
       "auto",
@@ -202,13 +202,16 @@ class TalkingLeaves:
     self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260,0)
 
   def fillTables(self):
+    '''
+    Fill script and language lists with initial data
+    '''
 
-    scripts = self.list2TableFrom2dArray_headers_(
+    scripts = self.tableFrom2dArray_withHeaders_(
       self.scriptsData.items(),
       self.scriptsColHeaders,
     )
     self.scriptsTable.set(scripts)
-    self.langsTable.set(self.hgFindLangsByScript_(self.defaultScript))
+    self.langsTable.set(self.getLangsForScript_(self.defaultScript))
 
     # Fix some UI details…
 
@@ -221,7 +224,11 @@ class TalkingLeaves:
     self.scriptsTable.getNSTableView().scrollRowToVisible_(0)
     self.langsTable.getNSTableView().scrollRowToVisible_(0)
 
-  def hgFindLangsByScript_(self, script):
+  def getLangsForScript_(self, script):
+    '''
+    Get languages for specified script, and compile data into an object
+    formatted for a vanilla.List2 element
+    '''
 
     charset = [g.string for g in self.font.glyphs if g.unicode]
     langCodes = self.hg.keys()
@@ -269,7 +276,7 @@ class TalkingLeaves:
 
   def getScriptsAndSpeakers(self):
     '''
-    Initialize lists of scripts
+    Get script names and speaker counts, return as sorted dict
     '''
     scripts = []
     speakers = {}
@@ -282,7 +289,11 @@ class TalkingLeaves:
         speakers[ortho['script']] += lang.get('speakers',0)
     return dict(sorted(speakers.items(),key=lambda x:x[1],reverse=True))
 
-  def list2TableFrom2dArray_headers_(self, array, columnDescriptions):
+  def tableFrom2dArray_withHeaders_(self, array, columnDescriptions):
+    '''
+    Convert a 2D array of data fields and a list of column headers into an
+    object formatted for vanilla.List2
+    '''
     items = []
     for row in array:
       items.append({})
@@ -290,18 +301,31 @@ class TalkingLeaves:
         items[-1][columnDescriptions[i]['identifier']] = col
     return items
 
-  def loadLangs(self, sender):
+  def refreshLangs(self, sender):
+    '''
+    Load/reload languages for the currently selected script
+    '''
+
     if hasattr(self,'scriptsTable'):
       self.currentScript = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
     else:
       self.currentScript = self.defaultScript
 
-    items = self.hgFindLangsByScript_(self.currentScript)
+    items = self.getLangsForScript_(self.currentScript)
     self.langsTable.set(items)
     self.langsFormatting()
     self.updateStatusBar()
 
   def updateStatusBar(self):
+    '''
+    Write some useful info in the bottom of the window
+    '''
+
+    self.selectedChars = []
+    for i in self.langsTable.getSelectedIndexes():
+      self.selectedChars.extend(self.langsTable.get()[i]['Missing'].split())
+    self.selectedChars = set(self.selectedChars)
+
     m = "{supported}/{total}={percent}% {script} supported".format(
       script=self.currentScript,
       total=self.scriptsLangCount[self.currentScript],
@@ -340,24 +364,38 @@ class TalkingLeaves:
     pass
 
   def langSpeakersValue_toCell(self, value):
+    '''
+    Unknown speaker count has already been set to -1, so display it in the
+    cell as "no data"
+    '''
     if value == -1:
       return "(no data)"
     else:
       return value
 
   def langStatusValue_toCell(self, value):
+    '''
+    Unknown language status is "", so display it as "no data"
+    '''
     if value == "":
       return "(no data)"
     else:
       return value
 
   def missingValue_toCell(self, value):
+    '''
+    If no chars are missing, display as "complete"
+    '''
     if value == "":
       return "(complete)"
     else:
       return value
 
   def addGlyphsCallback(self, sender):
+    '''
+    Add missing glyphs from selected languages to the font
+    '''
+
     selected = self.langsTable.getSelectedIndexes()
     newGlyphs = []
     for i in selected:
@@ -365,7 +403,7 @@ class TalkingLeaves:
         newGlyph = GSGlyph(char)
         if newGlyph not in newGlyphs:
           newGlyphs.append(newGlyph)
-    print(newGlyphs)
+
     tab = self.font.newTab()
     for g in newGlyphs:
       self.font.glyphs.append(g)
@@ -373,25 +411,23 @@ class TalkingLeaves:
     tab.setTitle_("New glyphs added")
 
   def langsSelectionCallback(self, sender):
-    self.selectedChars = []
-    for i in self.langsTable.getSelectedIndexes():
-      self.selectedChars.extend(self.langsTable.get()[i]['Missing'].split())
-    self.selectedChars = set(self.selectedChars)
     self.updateStatusBar()
 
   def showUnsupportedCallback(self, sender):
-    self.loadLangs(sender)
+    self.refreshLangs(sender)
 
   def showSupportedCallback(self, sender):
-    self.loadLangs(sender)
-
-  def refreshLangs(self, sender):
-    self.loadLangs(sender)
+    self.refreshLangs(sender)
 
   def openRepoCallback(self, sender):
     webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
 
   def checkForHyperglotUpdates(self):
+    '''
+    Hyperglot is updated frequently, with new languages being added often, so
+    remind the user whenever updates are available.
+    '''
+
     if URLReader == None:
       print("urlreader is missing! Check README.md for instructions to install it. TalkingLeaves will work without it, but it won't be able to notify you when Hyperglot updates are available.")
       return
@@ -415,6 +451,7 @@ class TalkingLeaves:
 class charList(str):
   '''
   A list of chars that acts like a string, but sorts by the list length.
+  (This is used for the Missing column)
   '''
 
   def __new__(self, l=[]):

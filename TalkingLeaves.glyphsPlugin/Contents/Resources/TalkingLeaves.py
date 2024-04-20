@@ -411,6 +411,11 @@ class TalkingLeaves:
     tab = self.font.newTab()
     for g in newGlyphs:
       self.font.glyphs.append(g)
+
+      # Try to make glyph from components
+      for layer in self.font.glyphs[g.name].layers:
+        layer.makeComponents()
+
     tab.text = ''.join([f"/{g.name} " for g in newGlyphs])
     tab.setTitle_("New glyphs added")
     self.refreshLangs(sender)

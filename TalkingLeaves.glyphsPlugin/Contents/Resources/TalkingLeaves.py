@@ -331,7 +331,7 @@ class TalkingLeaves:
       self.selectedChars.extend(self.langsTable.get()[i]['Missing'].split())
     self.selectedChars = set(self.selectedChars)
 
-    m = "{supported}/{total}={percent}% {script} supported".format(
+    m = "{supported}/{total} = {percent}% {script} supported".format(
       script=self.currentScript,
       total=self.scriptsLangCount[self.currentScript],
       unsupported=self.currentScriptUnsupported,

@@ -224,6 +224,9 @@ class TalkingLeaves:
     self.scriptsTable.getNSTableView().scrollRowToVisible_(0)
     self.langsTable.getNSTableView().scrollRowToVisible_(0)
 
+    # Refresh langs when window becomes active
+    self.w.bind('became key', self.windowBecameKey)
+
   def getLangsForScript_(self, script):
     '''
     Get languages for specified script, and compile data into an object
@@ -396,12 +399,13 @@ class TalkingLeaves:
     Add missing glyphs from selected languages to the font
     '''
 
+    charset = [g.string for g in self.font.glyphs if g.unicode]
     selected = self.langsTable.getSelectedIndexes()
     newGlyphs = []
     for i in selected:
       for char in self.langsTable.get()[i]['Missing'].split():
         newGlyph = GSGlyph(char)
-        if newGlyph not in newGlyphs:
+        if newGlyph not in newGlyphs and char not in charset:
           newGlyphs.append(newGlyph)
 
     tab = self.font.newTab()
@@ -409,6 +413,7 @@ class TalkingLeaves:
       self.font.glyphs.append(g)
     tab.text = ''.join([f"/{g.name} " for g in newGlyphs])
     tab.setTitle_("New glyphs added")
+    self.refreshLangs(sender)
 
   def langsSelectionCallback(self, sender):
     self.updateStatusBar()
@@ -417,6 +422,9 @@ class TalkingLeaves:
     self.refreshLangs(sender)
 
   def showSupportedCallback(self, sender):
+    self.refreshLangs(sender)
+
+  def windowBecameKey(self, sender):
     self.refreshLangs(sender)
 
   def openRepoCallback(self, sender):
@@ -436,7 +444,6 @@ class TalkingLeaves:
     def callback(url, data, error):
       if url and data and not error:
         metadata = json.loads(data.decode('utf-8'))
-        print(metadata['info']['version'], hyperglot.__version__)
         if metadata['info']['version'] != hyperglot.__version__:
           import sys
           pythonVersion = '.'.join([str(x) for x in sys.version_info][:3])

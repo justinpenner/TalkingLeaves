@@ -13,7 +13,7 @@ from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox
 )
 import json
-from Foundation import NSURL, NSData
+from Foundation import NSURL, NSURLSession
 import webbrowser
 
 # Tell older Glyphs where to find dependencies
@@ -32,11 +32,6 @@ try:
   import hyperglot.language
 except ModuleNotFoundError:
   hyperglot = None
-
-try:
-  from urlreader import URLReader
-except ModuleNotFoundError:
-  URLReader = None
 
 MIN_COLUMN_WIDTH = 20
 
@@ -442,14 +437,9 @@ class TalkingLeaves:
     Hyperglot is updated frequently, with new languages being added often, so
     remind the user whenever updates are available.
     '''
-
-    if URLReader == None:
-      print("urlreader is missing! Check README.md for instructions to install it. TalkingLeaves will work without it, but it won't be able to notify you when Hyperglot updates are available.")
-      return
-
-    url = ('https://pypi.org/pypi/hyperglot/json')
-    def callback(url, data, error):
-      if url and data and not error:
+    url = NSURL.URLWithString_("https://pypi.org/pypi/hyperglot/json")
+    def callback(data, response, error):
+      if data and response and not error:
         metadata = json.loads(data.decode('utf-8'))
         if metadata['info']['version'] != hyperglot.__version__:
           import sys
@@ -460,7 +450,9 @@ class TalkingLeaves:
             title='Update available',
             OKButton='Dismiss',
           )
-    URLReader().fetch(url, callback)
+
+    dataTask = NSURLSession.sharedSession().dataTaskWithURL_completionHandler_(url, callback)
+    dataTask.resume()
 
 class charList(str):
   '''

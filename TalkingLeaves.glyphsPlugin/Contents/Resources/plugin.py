@@ -5,8 +5,9 @@ GlyphsApp plugin wrapper for TalkingLeaves.
 '''
 
 import objc
-from GlyphsApp import *
-from GlyphsApp.plugins import *
+from AppKit import NSMenuItem, NSCommandKeyMask, NSAlternateKeyMask
+from GlyphsApp import Glyphs, DOCUMENTOPENED, DOCUMENTDIDCLOSE
+from GlyphsApp.plugins import GeneralPlugin
 from TalkingLeaves import *
 
 class TalkingLeavesPlugin(GeneralPlugin):

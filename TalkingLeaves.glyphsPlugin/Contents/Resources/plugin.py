@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-__doc__='''
+__doc__ = '''
 GlyphsApp plugin wrapper for TalkingLeaves.
 '''
 
 import objc
-from GlyphsApp import *
-from GlyphsApp.plugins import *
+from AppKit import NSMenuItem, NSCommandKeyMask, NSAlternateKeyMask
+from GlyphsApp import Glyphs, DOCUMENTOPENED, DOCUMENTDIDCLOSE
+from GlyphsApp.plugins import GeneralPlugin
 from TalkingLeaves import *
+
 
 class TalkingLeavesPlugin(GeneralPlugin):
 
@@ -21,7 +23,7 @@ class TalkingLeavesPlugin(GeneralPlugin):
     print("Loading TalkingLeaves plugin…")
     self.name = Glyphs.localize({
       'en': 'Talking Leaves',
-      })
+    })
 
     self.keyboardShortcut = 't'
     # Set any combination of NSShiftKeyMask | NSControlKeyMask | NSCommandKeyMask | NSAlternateKeyMask
@@ -38,8 +40,8 @@ class TalkingLeavesPlugin(GeneralPlugin):
     if len(Glyphs.documents) == 0:
       self.setMenuItemStatus_(False)
 
-    Glyphs.addCallback(self.documentOpened_,DOCUMENTOPENED)
-    Glyphs.addCallback(self.documentClosed_,DOCUMENTDIDCLOSE)
+    Glyphs.addCallback(self.documentOpened_, DOCUMENTOPENED)
+    Glyphs.addCallback(self.documentClosed_, DOCUMENTDIDCLOSE)
 
   def documentOpened_(self, sender):
     self.setMenuItemStatus_(True)
@@ -55,11 +57,11 @@ class TalkingLeavesPlugin(GeneralPlugin):
     self.menuItem.setHidden_(not status)
 
   def openWindow_(self, sender):
-    if self.tl and hasattr(self.tl,'w'):
+    if self.tl and hasattr(self.tl, 'w'):
       self.tl.w.show()
     else:
       self.tl = TalkingLeaves()
-      if hasattr(self.tl,'w'):
+      if hasattr(self.tl, 'w'):
         self.menuItem.setState_(True)
         self.tl.w.bind("close", self.windowWillClose_)
 

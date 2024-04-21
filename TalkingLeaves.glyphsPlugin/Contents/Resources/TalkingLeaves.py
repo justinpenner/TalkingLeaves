@@ -1,7 +1,7 @@
-#MenuTitle: TalkingLeaves
+# MenuTitle: TalkingLeaves
 # -*- coding: utf-8 -*-
 
-__doc__='''
+__doc__ = '''
 Developers: this script (TalkingLeaves.py) can be run directly from within
 Glyphs. In your Scripts folder, add an alias to the TalkingLeaves parent
 folder. Then you don't have to restart Glyphs each time you make changes to
@@ -24,7 +24,7 @@ if Glyphs.versionNumber < 3.2:
   if PKGS_PATH not in sys.path:
     scriptsPath = str(Path('~/Library/Application Support/Glyphs 3/Scripts').expanduser())
     pos = sys.path.index(scriptsPath)+1
-    sys.path.insert(pos,PKGS_PATH)
+    sys.path.insert(pos, PKGS_PATH)
 
 try:
   import hyperglot
@@ -40,6 +40,7 @@ except ModuleNotFoundError:
 
 MIN_COLUMN_WIDTH = 20
 
+
 def main():
 
   Glyphs.clearLog()
@@ -51,6 +52,7 @@ def main():
 
   TalkingLeaves()
 
+
 class TalkingLeaves:
 
   def __init__(self):
@@ -60,7 +62,7 @@ class TalkingLeaves:
       answer = dialogs.ask(
         messageText='Hyperglot module is missing',
         informativeText='Follow the installation instructions at https://github.com/justinpenner/TalkingLeaves#installation',
-        buttonTitles=[(f'Open in browser',1),('Cancel',0)],
+        buttonTitles=[(f'Open in browser', 1), ('Cancel', 0)],
       )
       if answer:
         webbrowser.open('https://github.com/justinpenner/TalkingLeaves#installation')
@@ -127,10 +129,10 @@ class TalkingLeaves:
     self.w = Window(
       self.windowSize,
       f"TalkingLeaves ({(Glyphs.currentDocument.filePath or self.font.familyName).split('/')[-1]} - {self.font.familyName})",
-      minSize=(640,180),
+      minSize=(640, 180),
     )
     self.scriptsTable = List2(
-      (0,0,-0,-0),
+      (0, 0, -0, -0),
       [],
       columnDescriptions=self.scriptsColHeaders,
       allowsMultipleSelection=False,
@@ -152,15 +154,15 @@ class TalkingLeaves:
       callback=self.showUnsupportedCallback,
     )
     self.langsTable = List2(
-      (0,0,-0,-0),
+      (0, 0, -0, -0),
       [],
       columnDescriptions=self.langsColHeaders,
       enableTypingSensitivity=True,
       selectionCallback=self.langsSelectionCallback,
     )
     panes = [
-      dict(view=self.scriptsTable,identifier="scripts",canCollapse=False,minSize=MIN_COLUMN_WIDTH),
-      dict(view=self.langsTable,identifier="langs",canCollapse=False,minSize=MIN_COLUMN_WIDTH),
+      dict(view=self.scriptsTable, identifier="scripts", canCollapse=False, minSize=MIN_COLUMN_WIDTH),
+      dict(view=self.langsTable, identifier="langs", canCollapse=False, minSize=MIN_COLUMN_WIDTH),
     ]
     self.w.top = SplitView("auto", panes)
     self.w.addGlyphs = Button(
@@ -191,15 +193,15 @@ class TalkingLeaves:
       "V:|[top]-pad-[addGlyphs]-pad-|",
       "V:|[top]-pad-[openRepo]-pad-|",
     ]
-    metrics = dict(pad=12,gap=16)
-    self.w.addAutoPosSizeRules(rules,metrics)
+    metrics = dict(pad=12, gap=16)
+    self.w.addAutoPosSizeRules(rules, metrics)
 
     # Open GUI
     self.w.open()
 
     # Pane widths don't work when SplitView is in auto layout
     # Divider position has to be set after opening window
-    self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260,0)
+    self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260, 0)
 
   def fillTables(self):
     '''
@@ -243,7 +245,7 @@ class TalkingLeaves:
     for langCode in langCodes:
 
       langYaml = self.hgYaml[langCode]
-      lang = getattr(self.hg,langCode)
+      lang = getattr(self.hg, langCode)
 
       # Skip languages that don't have any orthographies listed
       if 'orthographies' not in lang:
@@ -264,16 +266,16 @@ class TalkingLeaves:
         else:
           self.currentScriptSupported += 1
 
-        if (len(unsupported)>=1 and self.w.showUnsupported.get()) \
-        or (len(unsupported)==0 and self.w.showSupported.get()):
+        if (len(unsupported) >= 1 and self.w.showUnsupported.get()) \
+        or (len(unsupported) == 0 and self.w.showSupported.get()):
           items.append({
-            'Language': lang.get('preferred_name',lang['name']),
-            'L1 Speakers': langYaml.get('speakers',-1),
-            'Ortho. Status': ortho.get('status',''),
-            'Lang. Status': lang.get('status',''),
+            'Language': lang.get('preferred_name', lang['name']),
+            'L1 Speakers': langYaml.get('speakers', -1),
+            'Ortho. Status': ortho.get('status', ''),
+            'Lang. Status': lang.get('status', ''),
             'Missing': charList(unsupported),
           })
-    items = sorted(items,key=lambda x:len(x['Missing']))
+    items = sorted(items, key=lambda x: len(x['Missing']))
 
     return items
 
@@ -284,13 +286,13 @@ class TalkingLeaves:
     scripts = []
     speakers = {}
     for lang in self.hg.values():
-      orthos = lang.get('orthographies',[])
+      orthos = lang.get('orthographies', [])
       for ortho in orthos:
         if ortho['script'] not in scripts:
           scripts.append(ortho['script'])
           speakers[ortho['script']] = 0
-        speakers[ortho['script']] += lang.get('speakers',0)
-    return dict(sorted(speakers.items(),key=lambda x:x[1],reverse=True))
+        speakers[ortho['script']] += lang.get('speakers', 0)
+    return dict(sorted(speakers.items(), key=lambda x: x[1], reverse=True))
 
   def tableFrom2dArray_withHeaders_(self, array, columnDescriptions):
     '''
@@ -300,7 +302,7 @@ class TalkingLeaves:
     items = []
     for row in array:
       items.append({})
-      for i,col in enumerate(row):
+      for i, col in enumerate(row):
         items[-1][columnDescriptions[i]['identifier']] = col
     return items
 
@@ -309,7 +311,7 @@ class TalkingLeaves:
     Load/reload languages for the currently selected script
     '''
 
-    if hasattr(self,'scriptsTable'):
+    if hasattr(self, 'scriptsTable'):
       self.currentScript = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
     else:
       self.currentScript = self.defaultScript
@@ -329,7 +331,7 @@ class TalkingLeaves:
       self.selectedChars.extend(self.langsTable.get()[i]['Missing'].split())
     self.selectedChars = set(self.selectedChars)
 
-    m = "{supported}/{total}={percent}% {script} supported".format(
+    m = "{supported}/{total} = {percent}% {script} supported".format(
       script=self.currentScript,
       total=self.scriptsLangCount[self.currentScript],
       unsupported=self.currentScriptUnsupported,
@@ -466,11 +468,11 @@ class charList(str):
   (This is used for the Missing column)
   '''
 
-  def __new__(self, l=[]):
+  def __new__(self, l):
     self.l = l
     return str.__new__(self, ' '.join(l))
 
-  def __init__(self, l=[]):
+  def __init__(self, l):
     self.l = l
     self.__str__ = ' '.join(l)
   

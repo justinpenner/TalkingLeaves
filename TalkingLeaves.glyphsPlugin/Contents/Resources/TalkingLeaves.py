@@ -468,15 +468,11 @@ class charList(str):
   (This is used for the Missing column)
   '''
 
-  def __new__(self, l=None):
-    if l is None:
-      l = []
+  def __new__(self, l):
     self.l = l
     return str.__new__(self, ' '.join(l))
 
-  def __init__(self, l=None):
-    if l is None:
-      l = []
+  def __init__(self, l):
     self.l = l
     self.__str__ = ' '.join(l)
   

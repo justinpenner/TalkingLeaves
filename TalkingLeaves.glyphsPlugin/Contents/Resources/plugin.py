@@ -20,7 +20,6 @@ class TalkingLeavesPlugin(GeneralPlugin):
     # Don't instantiate it now (wait until requested) or it would slow down GlyphsApp startup
     self.tl = None
 
-    print("Loading TalkingLeaves plugin…")
     self.name = Glyphs.localize({
       'en': 'Talking Leaves',
     })

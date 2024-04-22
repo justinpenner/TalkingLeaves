@@ -397,12 +397,22 @@ class TalkingLeaves:
     '''
 
     charset = [g.string for g in self.font.glyphs if g.unicode]
+    glyphset = [g.name for g in self.font.glyphs]
+
     selected = self.langsTable.getSelectedIndexes()
     newGlyphs = []
     for i in selected:
       for char in self.langsTable.get()[i]['Missing'].split():
         newGlyph = GSGlyph(char)
-        if newGlyph not in newGlyphs and char not in charset:
+
+        # Skip if codepoint is present in font
+        if newGlyph.string in charset:
+          continue
+        # Skip if glyph name is present in font
+        if newGlyph.name in glyphset:
+          continue
+
+        if newGlyph not in newGlyphs:
           newGlyphs.append(newGlyph)
 
     tab = self.font.newTab()

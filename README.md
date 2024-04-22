@@ -29,7 +29,7 @@ Install Python via [Python.org](https://www.python.org/), or use a package manag
 > [!IMPORTANT]
 > Replace `3.11.6` with your Python version number from _Glyphs > Preferences > Addons_.
 
-	pip3 install --python-version=3.11.6 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot urlreader pyobjc cocoa-vanilla
+	pip3 install --python-version=3.11.6 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot pyobjc cocoa-vanilla
 
 > [!NOTE]
 > * `--python-version` tells pip to find packages for the Python version that you’re using in Glyphs.

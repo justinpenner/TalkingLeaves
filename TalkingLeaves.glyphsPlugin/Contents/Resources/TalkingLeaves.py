@@ -74,6 +74,9 @@ class TalkingLeaves:
     self.scriptsLangCount = {}
     self.defaultScriptIndex = 0
     self.defaultScript = self.scripts[self.defaultScriptIndex]
+    self.glyphInfoByChar = {}
+    self.charNamesByGlyph = {}
+    self.allMarks = []
     self.fillTables()
 
     self.checkForHyperglotUpdates()
@@ -231,6 +234,7 @@ class TalkingLeaves:
     '''
 
     charset = [g.string for g in self.font.glyphs if g.unicode]
+    glyphset = [g.name for g in self.font.glyphs]
     langCodes = self.hg.keys()
     items = []
     self.scriptsLangCount[script] = 0
@@ -254,25 +258,54 @@ class TalkingLeaves:
         self.scriptsLangCount[script] += len(orthos)
 
       for ortho in orthos:
-        base = list(set(ortho['base']))
-        unsupported = [c for c in base if c not in charset]
-        if len(unsupported):
+
+        # We just need unsupportedChars but it takes a few steps to get there
+        # in somewhat-readable code
+        orthoBase = list(set(ortho['base']))
+        orthoMarks = [m[-1] for m in ortho.get('marks', '').split()]
+        orthoNumerals = list(set(ortho.get('numerals', '')))
+        orthoPunctuation = list(set(ortho.get('punctuation', '')))
+        orthoChars = orthoBase + orthoMarks + orthoNumerals + orthoPunctuation
+        orthoGlyphNames = [self.glyphInfoForChar_(c).name for c in orthoBase + orthoMarks]
+        unsupportedGlyphNames = [g for g in orthoGlyphNames if g not in glyphset]
+        unsupportedChars = [self.charNamesByGlyph[g] for g in unsupportedGlyphNames]
+
+        # Make display version of unsupportedChars
+        self.allMarks += orthoMarks
+        def addDottedCircle(c):
+          if c in self.allMarks:
+            return "◌"+c
+          else:
+            return c
+        unsupportedCharsDisplay = [addDottedCircle(c) for c in unsupportedChars]
+
+        if len(unsupportedChars):
           self.currentScriptUnsupported += 1
         else:
           self.currentScriptSupported += 1
 
-        if (len(unsupported) >= 1 and self.w.showUnsupported.get()) \
-        or (len(unsupported) == 0 and self.w.showSupported.get()):
+        if (len(unsupportedChars) >= 1 and self.w.showUnsupported.get()) \
+        or (len(unsupportedChars) == 0 and self.w.showSupported.get()):
           items.append({
             'Language': lang.get('preferred_name', lang['name']),
             'L1 Speakers': langYaml.get('speakers', -1),
             'Ortho. Status': ortho.get('status', ''),
             'Lang. Status': lang.get('status', ''),
-            'Missing': charList(unsupported),
+            'Missing': charList(unsupportedCharsDisplay),
           })
     items = sorted(items, key=lambda x: len(x['Missing']))
 
     return items
+
+  def glyphInfoForChar_(self, c):
+    '''
+    Get glyph info for char, cache results
+    '''
+    if c not in self.glyphInfoByChar:
+      info = Glyphs.glyphInfoForUnicode(ord(c), self.font)
+      self.glyphInfoByChar[c] = info
+      self.charNamesByGlyph[info.name] = c
+    return self.glyphInfoByChar[c]
 
   def getScriptsAndSpeakers(self):
     '''
@@ -403,7 +436,7 @@ class TalkingLeaves:
     newGlyphs = []
     for i in selected:
       for char in self.langsTable.get()[i]['Missing'].split():
-        newGlyph = GSGlyph(char)
+        newGlyph = GSGlyph(char[-1])
 
         # Skip if codepoint is present in font
         if newGlyph.string in charset:

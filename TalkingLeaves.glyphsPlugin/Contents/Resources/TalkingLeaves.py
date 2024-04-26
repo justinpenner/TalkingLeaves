@@ -10,10 +10,10 @@ this file, like you normally do when you're developing a plugin.
 
 from GlyphsApp import *
 from vanilla import (
-  Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox
+  Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell
 )
 import json, csv, io, webbrowser
-from Foundation import NSURL, NSURLSession, NSPasteboard, NSString
+from Foundation import NSURL, NSURLSession, NSPasteboard, NSString, NSColorList
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
@@ -33,7 +33,6 @@ except ModuleNotFoundError:
   hyperglot = None
 
 MIN_COLUMN_WIDTH = 20
-
 
 def main():
 
@@ -64,6 +63,14 @@ class TalkingLeaves:
 
     self.font = Glyphs.font
     self.windowSize = (1000, 600)
+    # NSColorList.colorListNamed_('System').allKeys()
+    self.colors = dict(
+      red=NSColorList.colorListNamed_('System').colorWithKey_('systemRedColor'),
+      green=NSColorList.colorListNamed_('System').colorWithKey_('systemGreenColor'),
+      placeholder=NSColorList.colorListNamed_('System').colorWithKey_('placeholderTextColor'),
+      text=NSColorList.colorListNamed_('System').colorWithKey_('textColor'),
+    )
+
     self.startGUI()
 
     self.hg = hyperglot.languages.Languages()
@@ -101,6 +108,8 @@ class TalkingLeaves:
         title='L1 Speakers',
         width=100,
         valueToCellConverter=self.langSpeakersValue_toCell,
+        cellClass=TableCell,
+        cellClassArguments=dict(colors=self.colors),
       ),
       dict(
         title='Ortho. Status',
@@ -114,6 +123,8 @@ class TalkingLeaves:
       dict(
         title='Missing',
         valueToCellConverter=self.missingValue_toCell,
+        cellClass=TableCell,
+        cellClassArguments=dict(colors=self.colors),
       ),
     ]
     for colHeader in self.scriptsColHeaders + self.langsColHeaders:
@@ -731,6 +742,7 @@ class TalkingLeaves:
     Hyperglot is updated frequently, with new languages being added often, so
     remind the user whenever updates are available.
     '''
+
     url = NSURL.URLWithString_("https://pypi.org/pypi/hyperglot/json")
     def callback(data, response, error):
       if data and response and not error:
@@ -768,6 +780,21 @@ class charList(str):
 
   def listLen(self):
     return len(self.l)
+
+class TableCell(EditTextList2Cell):
+
+  def __init__(self, **kwargs):
+    self.colors = kwargs.pop('colors')
+    super().__init__(**kwargs)
+
+  def set(self, value):
+    self.editText.set(value)
+    if value == "(no data)":
+      self.getNSTextField().setTextColor_(self.colors['placeholder'])
+    elif value == "(complete)":
+      self.getNSTextField().setTextColor_(self.colors['placeholder'])
+    else:
+      self.getNSTextField().setTextColor_(self.colors['text'])
 
 if __name__ == '__main__':
   main()

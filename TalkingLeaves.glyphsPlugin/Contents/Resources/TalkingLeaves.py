@@ -12,9 +12,8 @@ from GlyphsApp import *
 from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox
 )
-import json
-from Foundation import NSURL, NSURLSession
-import webbrowser
+import json, csv, io, webbrowser
+from Foundation import NSURL, NSURLSession, NSPasteboard, NSString
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
@@ -23,7 +22,7 @@ if Glyphs.versionNumber < 3.2:
   PKGS_PATH = str(Path('~/Library/Application Support/Glyphs 3/Scripts/site-packages').expanduser())
   if PKGS_PATH not in sys.path:
     scriptsPath = str(Path('~/Library/Application Support/Glyphs 3/Scripts').expanduser())
-    pos = sys.path.index(scriptsPath)+1
+    pos = sys.path.index(scriptsPath) + 1
     sys.path.insert(pos, PKGS_PATH)
 
 try:
@@ -75,7 +74,7 @@ class TalkingLeaves:
     self.defaultScriptIndex = 0
     self.defaultScript = self.scripts[self.defaultScriptIndex]
     self.glyphInfoByChar = {}
-    self.charNamesByGlyph = {}
+    self.charsByGlyphName = {}
     self.allMarks = []
     self.fillTables()
 
@@ -136,6 +135,7 @@ class TalkingLeaves:
       allowsMultipleSelection=False,
       enableTypingSensitivity=True,
       selectionCallback=self.refreshLangs,
+      menuCallback=self.scriptsUpdateMenu,
     )
     self.w.showSupported = CheckBox(
       "auto",
@@ -157,6 +157,7 @@ class TalkingLeaves:
       columnDescriptions=self.langsColHeaders,
       enableTypingSensitivity=True,
       selectionCallback=self.langsSelectionCallback,
+      menuCallback=self.langsUpdateMenu,
     )
     panes = [
       dict(view=self.scriptsTable, identifier="scripts", canCollapse=False, minSize=MIN_COLUMN_WIDTH),
@@ -202,6 +203,7 @@ class TalkingLeaves:
     self.w.top.getNSSplitView().setPosition_ofDividerAtIndex_(260, 0)
 
   def fillTables(self):
+
     '''
     Fill script and language lists with initial data
     '''
@@ -228,6 +230,7 @@ class TalkingLeaves:
     self.w.bind('became key', self.windowBecameKey)
 
   def getLangsForScript_(self, script):
+
     '''
     Get languages for specified script, and compile data into an object
     formatted for a vanilla.List2 element
@@ -267,10 +270,19 @@ class TalkingLeaves:
         orthoPunctuation = list(set(ortho.get('punctuation', '')))
         orthoChars = orthoBase + orthoMarks + orthoNumerals + orthoPunctuation
         orthoGlyphNames = [self.glyphInfoForChar_(c).name for c in orthoBase + orthoMarks]
-        unsupportedGlyphNames = [g for g in orthoGlyphNames if g not in glyphset]
-        unsupportedChars = [self.charNamesByGlyph[g] for g in unsupportedGlyphNames]
 
-        # Make display version of unsupportedChars
+        supportedGlyphNames = []
+        unsupportedGlyphNames = []
+        for g in orthoGlyphNames:
+          if g in glyphset:
+            supportedGlyphNames.append(g)
+          else:
+            unsupportedGlyphNames.append(g)
+
+        supportedChars = [self.charsByGlyphName[g] for g in supportedGlyphNames]
+        unsupportedChars = [self.charsByGlyphName[g] for g in unsupportedGlyphNames]
+
+        # Make display version of (un)supportedChars
         self.allMarks += orthoMarks
         def addDottedCircle(c):
           if c in self.allMarks:
@@ -278,6 +290,7 @@ class TalkingLeaves:
           else:
             return c
         unsupportedCharsDisplay = [addDottedCircle(c) for c in unsupportedChars]
+        supportedCharsDisplay = [addDottedCircle(c) for c in supportedChars]
 
         if len(unsupportedChars):
           self.currentScriptUnsupported += 1
@@ -287,27 +300,31 @@ class TalkingLeaves:
         if (len(unsupportedChars) >= 1 and self.w.showUnsupported.get()) \
         or (len(unsupportedChars) == 0 and self.w.showSupported.get()):
           items.append({
+            'ISO': langCode,
             'Language': lang.get('preferred_name', lang['name']),
             'L1 Speakers': langYaml.get('speakers', -1),
             'Ortho. Status': ortho.get('status', ''),
             'Lang. Status': lang.get('status', ''),
             'Missing': charList(unsupportedCharsDisplay),
+            'Supported': charList(supportedCharsDisplay),
           })
     items = sorted(items, key=lambda x: len(x['Missing']))
 
     return items
 
   def glyphInfoForChar_(self, c):
+
     '''
     Get glyph info for char, cache results
     '''
     if c not in self.glyphInfoByChar:
       info = Glyphs.glyphInfoForUnicode(ord(c), self.font)
       self.glyphInfoByChar[c] = info
-      self.charNamesByGlyph[info.name] = c
+      self.charsByGlyphName[info.name] = c
     return self.glyphInfoByChar[c]
 
   def getScriptsAndSpeakers(self):
+
     '''
     Get script names and speaker counts, return as sorted dict
     '''
@@ -323,6 +340,7 @@ class TalkingLeaves:
     return dict(sorted(speakers.items(), key=lambda x: x[1], reverse=True))
 
   def tableFrom2dArray_withHeaders_(self, array, columnDescriptions):
+
     '''
     Convert a 2D array of data fields and a list of column headers into an
     object formatted for vanilla.List2
@@ -335,6 +353,7 @@ class TalkingLeaves:
     return items
 
   def refreshLangs(self, sender):
+
     '''
     Load/reload languages for the currently selected script
     '''
@@ -350,6 +369,7 @@ class TalkingLeaves:
     self.updateStatusBar()
 
   def updateStatusBar(self):
+
     '''
     Write some useful info in the bottom of the window
     '''
@@ -397,6 +417,7 @@ class TalkingLeaves:
     pass
 
   def langSpeakersValue_toCell(self, value):
+
     '''
     Unknown speaker count has already been set to -1, so display it in the
     cell as "no data"
@@ -407,6 +428,7 @@ class TalkingLeaves:
       return value
 
   def langStatusValue_toCell(self, value):
+
     '''
     Unknown language status is "", so display it as "no data"
     '''
@@ -416,6 +438,7 @@ class TalkingLeaves:
       return value
 
   def missingValue_toCell(self, value):
+
     '''
     If no chars are missing, display as "complete"
     '''
@@ -425,6 +448,7 @@ class TalkingLeaves:
       return value
 
   def addGlyphsCallback(self, sender):
+
     '''
     Add missing glyphs from selected languages to the font
     '''
@@ -460,6 +484,232 @@ class TalkingLeaves:
     tab.setTitle_("New glyphs added")
     self.refreshLangs(sender)
 
+  def scriptsUpdateMenu(self, sender=None):
+    self.scriptsMenu = [
+      dict(
+        title=f"Look up {getattr(self,'currentScript',self.defaultScript)} on Wikipedia",
+        enabled=True,
+        callback=self.scriptsWikipediaCallback,
+      ),
+      dict(
+        title='Copy selected row',
+        enabled=True,
+        callback=self.scriptsCopySelectedRowCallback,
+      ),
+      dict(
+        title='Copy all rows',
+        enabled=True,
+        callback=self.scriptsCopyAllRowsCallback,
+      ),
+    ]
+    self.scriptsTable.setMenu(self.scriptsMenu)
+
+  def langsUpdateMenu(self, sender=None):
+
+    if len(self.langsTable.getSelectedIndexes()) == 1:
+      language = self.langsTable.getSelectedItems()[0]['Language']
+    else:
+      language = 'language'
+
+    selectionHasMissingChars = any(
+      len(r['Missing']) for r in self.langsTable.getSelectedItems()
+    )
+    numRowsSelected = len(self.langsTable.getSelectedIndexes())
+
+    self.langsMenu = [
+      dict(
+        title=f'Look up {language} on Wikipedia',
+        enabled=numRowsSelected == 1,
+        callback=self.langsWikipediaCallback,
+      ),
+      dict(
+        title='Copy missing characters',
+        enabled=selectionHasMissingChars,
+        items=[
+          dict(
+            title='Space separated (marks keep dotted circles)',
+            callback=self.copyMissingSpaceSeparatedCallback,
+          ),
+          dict(
+            title='One per line',
+            callback=self.copyMissingOnePerLineCallback,
+          ),
+          dict(
+            title='Python list',
+            callback=self.copyMissingPythonListCallback,
+          ),
+        ],
+      ),
+      dict(
+        title='Copy missing codepoints',
+        enabled=selectionHasMissingChars,
+        items=[
+          dict(
+            title='One per line, Unicode notated',
+            callback=self.copyMissingCodepointsUnicode,
+          ),
+          dict(
+            title='One per line, hexadecimal',
+            callback=self.copyMissingCodepointsHex,
+          ),
+          dict(
+            title='One per line, decimal',
+            callback=self.copyMissingCodepointsDec,
+          ),
+        ],
+      ),
+      dict(
+        title='Copy selected rows',
+        enabled=numRowsSelected,
+        callback=self.langsCopySelectedRowsCallback,
+      ),
+      dict(
+        title='Copy all rows',
+        enabled=True,
+        callback=self.langsCopyAllRowsCallback,
+      ),
+      dict(
+        title='Supported characters',
+        enabled=True,
+        items=[
+          dict(
+            title='Select in Font View',
+            callback=self.langsSelectSupportedInFontView,
+          ),
+          dict(
+            title='Open in a new Edit View tab',
+            callback=self.langsOpenSupportedInNewTab,
+          ),
+        ],
+      ),
+    ]
+    self.langsTable.setMenu(self.langsMenu)
+    # Auto-enabling is on by default but Vanilla doesn't support it
+    self.langsTable._menu.setAutoenablesItems_(False)
+
+  def scriptsCopySelectedRowCallback(self, sender):
+    self.copyRows_fromTable_(
+      rowIndexes=self.scriptsTable.getSelectedIndexes(),
+      table=self.scriptsTable,
+    )
+
+  def scriptsCopyAllRowsCallback(self, sender):
+    self.copyRows_fromTable_(
+      rowIndexes=self.scriptsTable.getArrangedIndexes(),
+      table=self.scriptsTable,
+    )
+
+  def langsCopySelectedRowsCallback(self, sender):
+    self.copyRows_fromTable_(
+      rowIndexes=self.langsTable.getSelectedIndexes(),
+      table=self.langsTable,
+    )
+
+  def langsCopyAllRowsCallback(self, sender):
+    self.copyRows_fromTable_(
+      rowIndexes=self.langsTable.getArrangedIndexes(),
+      table=self.langsTable,
+    )
+
+  def copyRows_fromTable_(self, rowIndexes, table):
+
+    '''
+    Copy List2 rows to pasteboard in CSV format with tab delimiters
+    User can paste into Numbers or other spreadsheet apps
+    '''
+
+    text = io.StringIO('')
+    writer = csv.writer(text, dialect='excel-tab')
+
+    for i in rowIndexes:
+      writer.writerow(table.get()[i].values())
+
+    self.copyTextToPasteboard(text.getvalue())
+
+  def copyTextToPasteboard(self, text):
+    pasteboard = NSPasteboard.generalPasteboard()
+    pasteboard.clearContents()
+    pasteboard.writeObjects_([NSString(text)])
+
+  def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
+    missingChars = []
+    for row in self.langsTable.getSelectedItems():
+      missingChars += row['Missing'].split()
+
+    if marksRemoveDottedCircles:
+      for i,c in enumerate(missingChars):
+        if len(c) == 2 and c[0] == '◌':
+          missingChars[i] = missingChars[i][1]
+
+    return sorted(list(set(missingChars)))
+
+  def getSelectedSupportedChars(self, marksRemoveDottedCircles=True):
+    supportedChars = []
+    for row in self.langsTable.getSelectedItems():
+      supportedChars += row['Supported'].split()
+
+    if marksRemoveDottedCircles:
+      for i,c in enumerate(supportedChars):
+        if len(c) == 2 and c[0] == '◌':
+          supportedChars[i] = supportedChars[i][1]
+
+    return sorted(list(set(supportedChars)))
+
+  def copyMissingSpaceSeparatedCallback(self, sender):
+    self.copyTextToPasteboard(
+      ' '.join(self.getSelectedMissingChars(marksRemoveDottedCircles=False))
+    )
+
+  def copyMissingOnePerLineCallback(self, sender):
+    self.copyTextToPasteboard('\n'.join(self.getSelectedMissingChars())+'\n')
+
+  def copyMissingPythonListCallback(self, sender):
+    self.copyTextToPasteboard(
+      '["'+'", "'.join(self.getSelectedMissingChars())+'"]'
+    )
+
+  def copyMissingCodepointsUnicode(self, sender):
+    self.copyTextToPasteboard(
+      '\n'.join([f"U+{ord(c):04X}" for c in self.getSelectedMissingChars()])
+    )
+
+  def copyMissingCodepointsHex(self, sender):
+    self.copyTextToPasteboard(
+      '\n'.join([f"{ord(c):0X}" for c in self.getSelectedMissingChars()])
+    )
+
+  def copyMissingCodepointsDec(self, sender):
+    self.copyTextToPasteboard(
+      '\n'.join([str(ord(c)) for c in self.getSelectedMissingChars()])
+    )
+
+  def langsSelectSupportedInFontView(self, sender):
+    supported = self.getSelectedSupportedChars()
+    self.font.selection = [self.font.glyphs[self.glyphInfoByChar[c].name] for c in supported]
+
+  def langsOpenSupportedInNewTab(self, sender):
+    selectedLangNames = [r['Language'] for r in self.langsTable.getSelectedItems()]
+    supported = self.getSelectedSupportedChars()
+    tab = self.font.newTab()
+    tab.text = ''.join(
+      [f"/{self.glyphInfoByChar[c].name} " for c in supported]
+    )
+    tab.setTitle_(f"Supported for {', '.join(selectedLangNames)}")
+
+  def langsWikipediaCallback(self, sender):
+    webbrowser.open(
+      'https://en.wikipedia.org/w/index.php?search={language} language'.format(
+        language=self.langsTable.getSelectedItems()[0]['Language']
+      )
+    )
+
+  def scriptsWikipediaCallback(self, sender):
+    webbrowser.open(
+      'https://en.wikipedia.org/w/index.php?search={script} script'.format(
+        script=self.scriptsTable.getSelectedItems()[0]['Script']
+      )
+    )
+
   def langsSelectionCallback(self, sender):
     self.updateStatusBar()
 
@@ -476,6 +726,7 @@ class TalkingLeaves:
     webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
 
   def checkForHyperglotUpdates(self):
+
     '''
     Hyperglot is updated frequently, with new languages being added often, so
     remind the user whenever updates are available.
@@ -498,6 +749,7 @@ class TalkingLeaves:
     dataTask.resume()
 
 class charList(str):
+
   '''
   A list of chars that acts like a string, but sorts by the list length.
   (This is used for the Missing column)

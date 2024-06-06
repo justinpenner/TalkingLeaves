@@ -8,7 +8,6 @@ import objc
 from AppKit import NSMenuItem, NSCommandKeyMask, NSAlternateKeyMask
 from GlyphsApp import Glyphs, DOCUMENTOPENED, DOCUMENTDIDCLOSE, WINDOW_MENU
 from GlyphsApp.plugins import GeneralPlugin
-from TalkingLeaves import *
 
 
 class TalkingLeavesPlugin(GeneralPlugin):
@@ -60,6 +59,7 @@ class TalkingLeavesPlugin(GeneralPlugin):
     if self.tl and hasattr(self.tl, 'w'):
       self.tl.w.show()
     else:
+      from TalkingLeaves import TalkingLeaves
       self.tl = TalkingLeaves()
       if hasattr(self.tl, 'w'):
         self.menuItem.setState_(True)

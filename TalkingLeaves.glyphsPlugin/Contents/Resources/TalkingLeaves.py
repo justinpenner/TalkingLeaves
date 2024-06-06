@@ -23,7 +23,7 @@ if Glyphs.versionNumber < 3.2:
   PKGS_PATH = str(Path('~/Library/Application Support/Glyphs 3/Scripts/site-packages').expanduser())
   if PKGS_PATH not in sys.path:
     scriptsPath = str(Path('~/Library/Application Support/Glyphs 3/Scripts').expanduser())
-    pos = sys.path.index(scriptsPath)+1
+    pos = sys.path.index(scriptsPath) + 1
     sys.path.insert(pos, PKGS_PATH)
 
 try:

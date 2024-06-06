@@ -25,13 +25,13 @@ class TalkingLeavesPlugin(GeneralPlugin):
       'en': 'Talking Leaves',
     })
 
-    self.keyboardShortcut = 't'
+    keyboardShortcut = 't'
     # Set any combination of NSShiftKeyMask | NSControlKeyMask | NSCommandKeyMask | NSAlternateKeyMask
-    self.keyboardShortcutModifier = NSCommandKeyMask | NSAlternateKeyMask
+    keyboardShortcutModifier = NSCommandKeyMask | NSAlternateKeyMask
 
     self.menuItem = NSMenuItem(self.name, self.openWindow_)
-    self.menuItem.setKeyEquivalent_(self.keyboardShortcut)
-    self.menuItem.setKeyEquivalentModifierMask_(self.keyboardShortcutModifier)
+    self.menuItem.setKeyEquivalent_(keyboardShortcut)
+    self.menuItem.setKeyEquivalentModifierMask_(keyboardShortcutModifier)
 
   @objc.python_method
   def start(self):

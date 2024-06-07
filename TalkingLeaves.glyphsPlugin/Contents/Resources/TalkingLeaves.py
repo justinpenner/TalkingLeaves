@@ -250,16 +250,15 @@ class TalkingLeaves:
 
     charset = [g.string for g in self.font.glyphs if g.unicode]
     glyphset = [g.name for g in self.font.glyphs]
-    langCodes = self.hg.keys()
     items = []
     self.scriptsLangCount[script] = 0
     self.currentScriptUnsupported = 0
     self.currentScriptSupported = 0
 
-    for langCode in langCodes:
+    for langCode in self.hg.keys():
 
-      langYaml = self.hgYaml[langCode]
       lang = getattr(self.hg, langCode)
+      langYaml = self.hgYaml[langCode]
 
       # Skip languages that don't have any orthographies listed
       if 'orthographies' not in lang:

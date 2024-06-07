@@ -20,16 +20,19 @@ Those answers, of course, may change and grow as more languages are added to the
 
 ## Installation
 
+TalkingLeaves requires some dependencies that need to be installed via Python's `pip` package manager. This is currently tricky because most Glyphs users are using the "GlyphsPython" module, which is a Python framework that doesn't come with a working copy of `pip`. So we'll need to install Python first if you don't already have it.
+
 ### Install Python and pip
 
-Install Python via [Python.org](https://www.python.org/), or use a package manager such as [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/). Run `pip3` or `pip` in your Terminal to ensure pip is working.
+You can install Python via [Python.org](https://www.python.org/), or use a package manager such as [Homebrew](https://brew.sh/) or [MacPorts](https://www.macports.org/). Run `pip3` or `pip` in your Terminal to ensure pip is working.
 
 ### Install dependencies
 
 > [!IMPORTANT]
-> Replace `3.11.6` with your Python version number from _Glyphs > Preferences > Addons_.
+> Make sure _GlyphsPython_ is selected in _Glyphs > Preferences > Addons_, and take note of the GlyphsPython version number.
+> Run the following command in Terminal, replacing `3.11.9` with your GlyphsPython version number.
 
-	pip3 install --python-version=3.11.6 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot cocoa-vanilla
+	pip3 install --python-version=3.11.9 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot
 
 > [!NOTE]
 > * `--python-version` tells pip to find packages for the Python version that you’re using in Glyphs.
@@ -37,7 +40,7 @@ Install Python via [Python.org](https://www.python.org/), or use a package manag
 > * `--target` installs the packages in a Glyphs-only location, and keeps them out of your `pip list`.
 
 > [!WARNING]
-> If you change to another Python in _Glyphs > Preferences > Addons_, you may need to delete the contents of `~/Library/Application Support/Glyphs 3/Scripts/site-packages` and then install the dependencies again with the new Python version number.
+> I recommend sticking with GlyphsPython in _Glyphs > Preferences > Addons_, but if you need to use another Python, you may need to delete the contents of `~/Library/Application Support/Glyphs 3/Scripts/site-packages` and then install the dependencies again with the new Python version number. You'll also need to install `pyobjc==10.2`.
 
 ### Install TalkingLeaves plugin
 

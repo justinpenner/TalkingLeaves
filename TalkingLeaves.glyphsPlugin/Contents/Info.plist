@@ -15,7 +15,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>0.1</string> <!-- 1.0 -->
 	<key>CFBundleVersion</key>
-	<string>1</string> <!-- 123 -->
+	<string>2</string> <!-- 123 -->
 	<key>UpdateFeedURL</key>
 	<string>https://raw.githubusercontent.com/justinpenner/TalkingLeaves/main/TalkingLeaves.glyphsPlugin/Contents/Info.plist</string>
 	<key>productPageURL</key>

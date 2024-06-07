@@ -8,7 +8,6 @@ import objc
 from AppKit import NSMenuItem, NSCommandKeyMask, NSAlternateKeyMask
 from GlyphsApp import Glyphs, DOCUMENTOPENED, DOCUMENTDIDCLOSE, WINDOW_MENU
 from GlyphsApp.plugins import GeneralPlugin
-from TalkingLeaves import *
 
 
 class TalkingLeavesPlugin(GeneralPlugin):
@@ -24,41 +23,28 @@ class TalkingLeavesPlugin(GeneralPlugin):
       'en': 'Talking Leaves',
     })
 
-    self.keyboardShortcut = 't'
+    keyboardShortcut = 't'
     # Set any combination of NSShiftKeyMask | NSControlKeyMask | NSCommandKeyMask | NSAlternateKeyMask
-    self.keyboardShortcutModifier = NSCommandKeyMask | NSAlternateKeyMask
+    keyboardShortcutModifier = NSCommandKeyMask | NSAlternateKeyMask
 
-    self.menuItem = NSMenuItem(self.name, self.openWindow_)
-    self.menuItem.setKeyEquivalent_(self.keyboardShortcut)
-    self.menuItem.setKeyEquivalentModifierMask_(self.keyboardShortcutModifier)
+    self.menuItem = NSMenuItem(self.name)
+    self.menuItem.setAction_(self.openWindow_)
+    self.menuItem.setTarget_(self)
+    self.menuItem.setKeyEquivalent_(keyboardShortcut)
+    self.menuItem.setKeyEquivalentModifierMask_(keyboardShortcutModifier)
 
   @objc.python_method
   def start(self):
     Glyphs.menu[WINDOW_MENU].append(self.menuItem)
 
-    if len(Glyphs.documents) == 0:
-      self.setMenuItemStatus_(False)
-
-    Glyphs.addCallback(self.documentOpened_, DOCUMENTOPENED)
-    Glyphs.addCallback(self.documentClosed_, DOCUMENTDIDCLOSE)
-
-  def documentOpened_(self, sender):
-    self.setMenuItemStatus_(True)
-
-  def documentClosed_(self, sender):
-    if len(Glyphs.documents) == 0 and self.tl is None:
-      self.setMenuItemStatus_(False)
-
-  def setMenuItemStatus_(self, status):
-    # self.menuItem.setEnabled_(status)
-    # TODO: find out why setEnabled_ doesn't work
-    # In the meantime, we can just hide the menu item instead
-    self.menuItem.setHidden_(not status)
+  def validateMenuItem_(self, menuItem):  # this will be called just before the menu is opened. So we don't need to keep track if the state
+    return len(Glyphs.documents) > 0
 
   def openWindow_(self, sender):
     if self.tl and hasattr(self.tl, 'w'):
       self.tl.w.show()
     else:
+      from TalkingLeaves import TalkingLeaves
       self.tl = TalkingLeaves()
       if hasattr(self.tl, 'w'):
         self.menuItem.setState_(True)
@@ -67,8 +53,6 @@ class TalkingLeavesPlugin(GeneralPlugin):
   def windowWillClose_(self, sender):
     self.menuItem.setState_(False)
     self.tl = None
-    if len(Glyphs.documents) == 0:
-      self.setMenuItemStatus_(False)
 
   @objc.python_method
   def __file__(self):

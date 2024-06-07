@@ -6,7 +6,7 @@ GlyphsApp plugin wrapper for TalkingLeaves.
 
 import objc
 from AppKit import NSMenuItem, NSCommandKeyMask, NSAlternateKeyMask
-from GlyphsApp import Glyphs, WINDOW_MENU
+from GlyphsApp import Glyphs, DOCUMENTOPENED, DOCUMENTDIDCLOSE, WINDOW_MENU
 from GlyphsApp.plugins import GeneralPlugin
 
 
@@ -19,7 +19,6 @@ class TalkingLeavesPlugin(GeneralPlugin):
     # Don't instantiate it now (wait until requested) or it would slow down GlyphsApp startup
     self.tl = None
 
-    print("Loading TalkingLeaves plugin…")
     self.name = Glyphs.localize({
       'en': 'Talking Leaves',
     })

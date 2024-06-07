@@ -75,7 +75,6 @@ class TalkingLeaves:
     self.startGUI()
 
     self.hg = hyperglot.languages.Languages()
-    self.hgYaml = dict(hyperglot.languages.Languages())
     self.scriptsData = self.getScriptsAndSpeakers()
     self.scripts = list(self.scriptsData.keys())
     self.scriptsLangCount = {}
@@ -250,15 +249,13 @@ class TalkingLeaves:
 
     charset = [g.string for g in self.font.glyphs if g.unicode]
     glyphset = [g.name for g in self.font.glyphs]
-    langCodes = self.hg.keys()
     items = []
     self.scriptsLangCount[script] = 0
     self.currentScriptUnsupported = 0
     self.currentScriptSupported = 0
 
-    for langCode in langCodes:
+    for langCode in self.hg.keys():
 
-      langYaml = self.hgYaml[langCode]
       lang = getattr(self.hg, langCode)
 
       # Skip languages that don't have any orthographies listed
@@ -318,7 +315,7 @@ class TalkingLeaves:
           items.append({
             'ISO': langCode,
             'Language': lang.get('preferred_name', lang['name']),
-            'L1 Speakers': langYaml.get('speakers', -1),
+            'L1 Speakers': lang.get('speakers', -1),
             'Ortho. Status': ortho.get('status', ''),
             'Lang. Status': lang.get('status', ''),
             'Missing': charList(unsupportedCharsDisplay),

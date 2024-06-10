@@ -29,6 +29,7 @@ try:
   import hyperglot
   import hyperglot.languages
   import hyperglot.language
+  import hyperglot.orthography
 except ModuleNotFoundError:
   hyperglot = None
 
@@ -249,16 +250,15 @@ class TalkingLeaves:
 
     charset = [g.string for g in self.font.glyphs if g.unicode]
     glyphset = [g.name for g in self.font.glyphs]
-    langCodes = self.hg.keys()
     items = []
     self.scriptsLangCount[script] = 0
     self.currentScriptUnsupported = 0
     self.currentScriptSupported = 0
 
-    for langCode in langCodes:
+    for langCode in self.hg.keys():
 
-      langYaml = self.hgYaml[langCode]
       lang = getattr(self.hg, langCode)
+      langYaml = self.hgYaml[langCode]
 
       # Skip languages that don't have any orthographies listed
       if 'orthographies' not in lang:
@@ -275,11 +275,15 @@ class TalkingLeaves:
 
         # We just need unsupportedChars but it takes a few steps to get there
         # in somewhat-readable code
-        orthoBase = list(set(ortho['base']))
-        orthoMarks = [m[-1] for m in ortho.get('marks', '').split()]
-        orthoNumerals = list(set(ortho.get('numerals', '')))
-        orthoPunctuation = list(set(ortho.get('punctuation', '')))
-        orthoChars = orthoBase + orthoMarks + orthoNumerals + orthoPunctuation
+        orthography = hyperglot.orthography.Orthography(ortho)
+        orthoBase = sorted(set(orthography.base_chars))
+        orthoMarks = orthography.base_marks
+
+        # For possible future use
+        # orthoNumerals = list(set(ortho.get('numerals', '')))
+        # orthoPunctuation = list(set(ortho.get('punctuation', '')))
+        # orthoChars = orthoBase + orthoMarks + orthoNumerals + orthoPunctuation
+
         orthoGlyphNames = [self.glyphInfoForChar_(c).name for c in orthoBase + orthoMarks]
 
         supportedGlyphNames = []

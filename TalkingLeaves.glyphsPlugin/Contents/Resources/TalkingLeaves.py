@@ -75,6 +75,7 @@ class TalkingLeaves:
     self.startGUI()
 
     self.hg = hyperglot.languages.Languages()
+    self.hgYaml = dict(hyperglot.languages.Languages())
     self.scriptsData = self.getScriptsAndSpeakers()
     self.scripts = list(self.scriptsData.keys())
     self.scriptsLangCount = {}
@@ -316,7 +317,7 @@ class TalkingLeaves:
           items.append({
             'ISO': langCode,
             'Language': lang.get('preferred_name', lang['name']),
-            'L1 Speakers': lang.get('speakers', -1),
+            'L1 Speakers': langYaml.get('speakers', -1),
             'Ortho. Status': ortho.get('status', ''),
             'Lang. Status': lang.get('status', ''),
             'Missing': charList(unsupportedCharsDisplay),

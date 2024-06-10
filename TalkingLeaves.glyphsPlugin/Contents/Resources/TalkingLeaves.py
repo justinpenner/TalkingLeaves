@@ -257,6 +257,7 @@ class TalkingLeaves:
     for langCode in self.hg.keys():
 
       lang = getattr(self.hg, langCode)
+      langYaml = self.hgYaml[langCode]
 
       # Skip languages that don't have any orthographies listed
       if 'orthographies' not in lang:

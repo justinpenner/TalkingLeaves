@@ -76,7 +76,7 @@ class TalkingLeaves:
 
     # Stand-alone developer mode uses a "fake" GlyphsApp API for testing 
     # without opening GlyphsApp.
-    if Glyphs.devMode:
+    if getattr(Glyphs, "devMode", False):
       self._addDevTools()
 
     self.hg = hyperglot.languages.Languages()

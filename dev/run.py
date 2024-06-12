@@ -1,5 +1,6 @@
 import sys
-print(sys.argv)
+if len(sys.argv) < 2:
+  print("No Glyphs document specified. Loading default test document…")
 
 print("Check if required modules are installed…")
 import hyperglot, glyphsLib, vanilla, objc

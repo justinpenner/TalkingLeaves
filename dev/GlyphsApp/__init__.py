@@ -10,6 +10,9 @@ WINDOW_MENU = "WINDOW_MENU"
 
 class cfg:
   glyphsFile = "test.glyphs"
+  import sys
+  if len(sys.argv) >= 2:
+    glyphsFile = sys.argv[1]
 
 class GSApplication:
   def __init__(self):

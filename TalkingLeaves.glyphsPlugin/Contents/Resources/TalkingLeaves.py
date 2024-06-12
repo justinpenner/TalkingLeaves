@@ -385,7 +385,7 @@ class TalkingLeaves:
     Load/reload languages for the currently selected script
     '''
 
-    if hasattr(self, 'scriptsTable'):
+    if hasattr(self, 'scriptsTable') and len(self.scriptsTable.getSelectedIndexes()):
       self.currentScript = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
     else:
       self.currentScript = self.defaultScript

@@ -134,7 +134,7 @@ class TalkingLeaves:
         valueToCellConverter=self.langStatusValue_toCell,
       ),
       dict(
-        title='Missing',
+        title='Missing Chars',
         valueToCellConverter=self.missingValue_toCell,
         cellClass=TableCell,
         cellClassArguments=dict(colors=self.colors),
@@ -163,17 +163,23 @@ class TalkingLeaves:
     )
     self.w.showSupported = CheckBox(
       "auto",
-      "Show supported",
+      "Show completed",
       sizeStyle="regular",
       value=False,
       callback=self.showSupportedCallback,
     )
+    self.w.showSupported._nsObject.setToolTip_(
+      "Show languages whose basic set of Unicode characters is covered by your font. Some languages require additional unencoded glyphs and features."
+    )
     self.w.showUnsupported = CheckBox(
       "auto",
-      "Show unsupported",
+      "Show incomplete",
       sizeStyle="regular",
       value=True,
       callback=self.showUnsupportedCallback,
+    )
+    self.w.showUnsupported._nsObject.setToolTip_(
+      "Show languages whose basic set of Unicode characters is not yet covered by your font."
     )
     self.langsTable = List2(
       (0, 0, -0, -0),
@@ -332,10 +338,10 @@ class TalkingLeaves:
             'L1 Speakers': langYaml.get('speakers', -1),
             'Ortho. Status': ortho.get('status', ''),
             'Lang. Status': lang.get('status', ''),
-            'Missing': charList(unsupportedCharsDisplay),
+            'Missing Chars': charList(unsupportedCharsDisplay),
             'Supported': charList(supportedCharsDisplay),
           })
-    items = sorted(items, key=lambda x: len(x['Missing']))
+    items = sorted(items, key=lambda x: len(x['Missing Chars']))
 
     return items
 
@@ -403,7 +409,7 @@ class TalkingLeaves:
 
     self.selectedChars = []
     for i in self.langsTable.getSelectedIndexes():
-      self.selectedChars.extend(self.langsTable.get()[i]['Missing'].split())
+      self.selectedChars.extend(self.langsTable.get()[i]['Missing Chars'].split())
     self.selectedChars = set(self.selectedChars)
 
     m = "{supported}/{total} = {percent}% {script} supported".format(
@@ -486,7 +492,7 @@ class TalkingLeaves:
     selected = self.langsTable.getSelectedIndexes()
     newGlyphs = []
     for i in selected:
-      for char in self.langsTable.get()[i]['Missing'].split():
+      for char in self.langsTable.get()[i]['Missing Chars'].split():
         newGlyph = GSGlyph(char[-1])
 
         # Skip if codepoint is present in font
@@ -539,7 +545,7 @@ class TalkingLeaves:
       language = 'language'
 
     selectionHasMissingChars = any(
-      len(r['Missing']) for r in self.langsTable.getSelectedItems()
+      len(r['Missing Chars']) for r in self.langsTable.getSelectedItems()
     )
     numRowsSelected = len(self.langsTable.getSelectedIndexes())
 
@@ -661,7 +667,7 @@ class TalkingLeaves:
   def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
     missingChars = []
     for row in self.langsTable.getSelectedItems():
-      missingChars += row['Missing'].split()
+      missingChars += row['Missing Chars'].split()
 
     if marksRemoveDottedCircles:
       for i,c in enumerate(missingChars):

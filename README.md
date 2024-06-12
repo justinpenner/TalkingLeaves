@@ -1,8 +1,18 @@
 # 🍃 TalkingLeaves
 
-TalkingLeaves is a [GlyphsApp](https://glyphsapp.com/) plugin to explore the world’s languages and writing systems. It also comes with useful features to show you what languages your font already supports, and which glyphs are needed to support more languages.
+TalkingLeaves is a [GlyphsApp](https://glyphsapp.com/) plugin to explore the world’s languages and writing systems. It also comes with useful features to show you what languages your font may already support, and which glyphs are needed to support more languages.
 
 ![Screenshot of the TalkingLeaves plugin window](screenshot.png)
+
+## What does it mean to “support” a language?
+
+For many languages, this simply means having the right set of Unicode characters, like A–Z and a–z for English. **This is all that TalkingLeaves checks for at the moment – just character sets.**
+
+In the future, TalkingLeaves will help you learn what other features are needed for certain languages, such as additional unencoded glyphs including ligatures and alternate forms, mark attachments, and other positioning and substitution rules.
+
+For example, you can read [issue #16](https://github.com/justinpenner/TalkingLeaves/issues/16) to learn about plans to improve support for Arabic languages, which require unencoded "positional" glyphs that are contextually substituted depending whether they appear at the beginning, middle, or end of a word.
+
+For now, do not rely on TalkingLeaves to *confirm* which languages your font already supports. This can realistically only be done by analyzing your exported font file, checking its glyph set and the behaviour of its OpenType features. A rigorous check to confirm language support would include running it through both [Hyperglot](https://github.com/rosettatype/hyperglot/) and [Shaperglot](https://github.com/googlefonts/shaperglot/), and potentially more research for certain languages.
 
 ## What else can it do?
 

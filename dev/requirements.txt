@@ -1,0 +1,4 @@
+cocoa-vanilla>=0.5.0
+hyperglot>=0.6.3
+pyobjc>=10.3.1
+glyphsLib>=6.7.1

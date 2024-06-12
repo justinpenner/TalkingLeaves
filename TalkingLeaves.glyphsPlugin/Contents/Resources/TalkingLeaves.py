@@ -74,6 +74,11 @@ class TalkingLeaves:
 
     self.startGUI()
 
+    # Stand-alone developer mode uses a "fake" GlyphsApp API for testing 
+    # without opening GlyphsApp.
+    if Glyphs.devMode:
+      self._addDevTools()
+
     self.hg = hyperglot.languages.Languages()
     self.hgYaml = dict(hyperglot.languages.Languages())
     self.scriptsData = self.getScriptsAndSpeakers()
@@ -87,6 +92,13 @@ class TalkingLeaves:
     self.fillTables()
 
     self.checkForHyperglotUpdates()
+
+  def _addDevTools(self):
+    # Add menu item with Cmd-W shortcut to easily close window
+    from AppKit import NSApplication, NSMenuItem
+    app = NSApplication.sharedApplication()
+    fileMenu = app.mainMenu().itemAtIndex_(0)
+    fileMenu.submenu().addItemWithTitle_action_keyEquivalent_("Close Window", self.w.close, "w")
 
   def startGUI(self):
 

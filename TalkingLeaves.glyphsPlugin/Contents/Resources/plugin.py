@@ -27,7 +27,8 @@ class TalkingLeavesPlugin(GeneralPlugin):
     # Set any combination of NSShiftKeyMask | NSControlKeyMask | NSCommandKeyMask | NSAlternateKeyMask
     keyboardShortcutModifier = NSCommandKeyMask | NSAlternateKeyMask
 
-    self.menuItem = NSMenuItem(self.name)
+    self.menuItem = NSMenuItem.alloc().init()
+    self.menuItem.setTitle_(self.name)
     self.menuItem.setAction_(self.openWindow_)
     self.menuItem.setTarget_(self)
     self.menuItem.setKeyEquivalent_(keyboardShortcut)

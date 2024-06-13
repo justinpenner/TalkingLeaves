@@ -10,7 +10,7 @@ this file, like you normally do when you're developing a plugin.
 
 from GlyphsApp import *
 from vanilla import (
-  Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell
+  Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell, dialogs
 )
 import json, csv, io, webbrowser
 from Foundation import NSURL, NSURLSession, NSPasteboard, NSString, NSColorList
@@ -51,8 +51,15 @@ class TalkingLeaves:
 
   def __init__(self):
 
+    import objc
+    if objc.__version__ == "10.3":
+      answer = dialogs.message(
+        messageText='Incompatible pyobjc version',
+        informativeText='pyobjc 10.3 is incompatible with TalkingLeaves because it breaks the Vanilla library. Please upgrade to pyobjc>=10.3.1 and restart Glyphs.',
+      )
+      return
+
     if not hyperglot:
-      from vanilla import dialogs
       answer = dialogs.ask(
         messageText='Hyperglot module is missing',
         informativeText='Follow the installation instructions at https://github.com/justinpenner/TalkingLeaves#installation',
@@ -95,7 +102,7 @@ class TalkingLeaves:
 
   def _addDevTools(self):
     # Add menu item with Cmd-W shortcut to easily close window
-    from AppKit import NSApplication, NSMenuItem
+    from AppKit import NSApplication
     app = NSApplication.sharedApplication()
     fileMenu = app.mainMenu().itemAtIndex_(0)
     fileMenu.submenu().addItemWithTitle_action_keyEquivalent_("Close Window", self.w.close, "w")

@@ -8,12 +8,13 @@ folder. Then you don't have to restart Glyphs each time you make changes to
 this file, like you normally do when you're developing a plugin.
 '''
 
+import sys
 from GlyphsApp import *
 from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell, dialogs
 )
-import json, csv, io, webbrowser
-from Foundation import NSURL, NSURLSession, NSPasteboard, NSString, NSColorList
+from Foundation import NSURL, NSURLSession
+import utils
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
@@ -66,17 +67,17 @@ class TalkingLeaves:
         buttonTitles=[(f'Open in browser', 1), ('Cancel', 0)],
       )
       if answer:
-        webbrowser.open('https://github.com/justinpenner/TalkingLeaves#installation')
+        utils.webbrowser.open('https://github.com/justinpenner/TalkingLeaves#installation')
       return
 
     self.font = Glyphs.font
     self.windowSize = (1000, 600)
     # NSColorList.colorListNamed_('System').allKeys()
     self.colors = dict(
-      red=NSColorList.colorListNamed_('System').colorWithKey_('systemRedColor'),
-      green=NSColorList.colorListNamed_('System').colorWithKey_('systemGreenColor'),
-      placeholder=NSColorList.colorListNamed_('System').colorWithKey_('placeholderTextColor'),
-      text=NSColorList.colorListNamed_('System').colorWithKey_('textColor'),
+      red=utils.getSystemColorByName_('systemRedColor'),
+      green=utils.getSystemColorByName_('systemGreenColor'),
+      placeholder=utils.getSystemColorByName_('placeholderTextColor'),
+      text=utils.getSystemColorByName_('textColor'),
     )
 
     self.startGUI()
@@ -658,18 +659,10 @@ class TalkingLeaves:
     User can paste into Numbers or other spreadsheet apps
     '''
 
-    text = io.StringIO('')
-    writer = csv.writer(text, dialect='excel-tab')
-
+    rows = []
     for i in rowIndexes:
-      writer.writerow(table.get()[i].values())
-
-    self.copyTextToPasteboard(text.getvalue())
-
-  def copyTextToPasteboard(self, text):
-    pasteboard = NSPasteboard.generalPasteboard()
-    pasteboard.clearContents()
-    pasteboard.writeObjects_([NSString(text)])
+      rows.append(table.get()[i].values())
+    utils.writePasteboardText_(utils.csvFromRows_(rows))
 
   def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
     missingChars = []
@@ -696,30 +689,30 @@ class TalkingLeaves:
     return sorted(list(set(supportedChars)))
 
   def copyMissingSpaceSeparatedCallback(self, sender):
-    self.copyTextToPasteboard(
+    utils.writePasteboardText_(
       ' '.join(self.getSelectedMissingChars(marksRemoveDottedCircles=False))
     )
 
   def copyMissingOnePerLineCallback(self, sender):
-    self.copyTextToPasteboard('\n'.join(self.getSelectedMissingChars())+'\n')
+    utils.writePasteboardText_('\n'.join(self.getSelectedMissingChars())+'\n')
 
   def copyMissingPythonListCallback(self, sender):
-    self.copyTextToPasteboard(
+    utils.writePasteboardText_(
       '["'+'", "'.join(self.getSelectedMissingChars())+'"]'
     )
 
   def copyMissingCodepointsUnicode(self, sender):
-    self.copyTextToPasteboard(
+    utils.writePasteboardText_(
       '\n'.join([f"U+{ord(c):04X}" for c in self.getSelectedMissingChars()])
     )
 
   def copyMissingCodepointsHex(self, sender):
-    self.copyTextToPasteboard(
+    utils.writePasteboardText_(
       '\n'.join([f"{ord(c):0X}" for c in self.getSelectedMissingChars()])
     )
 
   def copyMissingCodepointsDec(self, sender):
-    self.copyTextToPasteboard(
+    utils.writePasteboardText_(
       '\n'.join([str(ord(c)) for c in self.getSelectedMissingChars()])
     )
 
@@ -737,14 +730,14 @@ class TalkingLeaves:
     tab.setTitle_(f"Supported for {', '.join(selectedLangNames)}")
 
   def langsWikipediaCallback(self, sender):
-    webbrowser.open(
+    utils.webbrowser.open(
       'https://en.wikipedia.org/w/index.php?search={language} language'.format(
         language=self.langsTable.getSelectedItems()[0]['Language']
       )
     )
 
   def scriptsWikipediaCallback(self, sender):
-    webbrowser.open(
+    utils.webbrowser.open(
       'https://en.wikipedia.org/w/index.php?search={script} script'.format(
         script=self.scriptsTable.getSelectedItems()[0]['Script']
       )
@@ -763,7 +756,7 @@ class TalkingLeaves:
     self.refreshLangs(sender)
 
   def openRepoCallback(self, sender):
-    webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
+    utils.webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
 
   def checkForHyperglotUpdates(self):
 
@@ -772,22 +765,23 @@ class TalkingLeaves:
     remind the user whenever updates are available.
     '''
 
-    url = NSURL.URLWithString_("https://pypi.org/pypi/hyperglot/json")
-    def callback(data, response, error):
-      if data and response and not error:
-        metadata = json.loads(data.decode('utf-8'))
-        if metadata['info']['version'] != hyperglot.__version__:
-          import sys
-          pythonVersion = '.'.join([str(x) for x in sys.version_info][:3])
-          message = f"Hyperglot {metadata['info']['version']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip3 install --python-version={pythonVersion} --only-binary=:all: --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" --upgrade hyperglot\n\nThen, restart Glyphs."
-          Message(
-            message,
-            title='Update available',
-            OKButton='Dismiss',
-          )
+    def callback(data):
+      try:
+        metadata = utils.parseJson_(data.decode('utf-8'))
+      except Exception:
+        # Not critical, so if anything goes wrong we can just check for updates again on next launch
+        return
+      if metadata['info']['version'] != hyperglot.__version__:
+        import sys
+        pythonVersion = '.'.join([str(x) for x in sys.version_info][:3])
+        message = f"Hyperglot {metadata['info']['version']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip3 install --python-version={pythonVersion} --only-binary=:all: --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" --upgrade hyperglot\n\nThen, restart Glyphs."
+        Message(
+          message,
+          title='Update available',
+          OKButton='Dismiss',
+        )
 
-    dataTask = NSURLSession.sharedSession().dataTaskWithURL_completionHandler_(url, callback)
-    dataTask.resume()
+    utils.getTextFromURL_successfulThen_("https://pypi.org/pypi/hyperglot/json", callback)
 
 class charList(str):
 

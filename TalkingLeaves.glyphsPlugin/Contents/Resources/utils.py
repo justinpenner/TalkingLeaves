@@ -28,4 +28,6 @@ def getTextFromURL_successfulThen_(url, successCallback):
   dataTask.resume()
 
 def getSystemColorByName_(name):
+  # List of system colours can be found here:
+  # NSColorList.colorListNamed_('System').allKeys()
   return NSColorList.colorListNamed_('System').colorWithKey_(name)

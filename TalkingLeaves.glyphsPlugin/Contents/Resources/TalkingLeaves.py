@@ -72,13 +72,6 @@ class TalkingLeaves:
 
     self.font = Glyphs.font
     self.windowSize = (1000, 600)
-    # NSColorList.colorListNamed_('System').allKeys()
-    self.colors = dict(
-      red=utils.getSystemColorByName_('systemRedColor'),
-      green=utils.getSystemColorByName_('systemGreenColor'),
-      placeholder=utils.getSystemColorByName_('placeholderTextColor'),
-      text=utils.getSystemColorByName_('textColor'),
-    )
 
     self.startGUI()
 
@@ -130,7 +123,6 @@ class TalkingLeaves:
         width=100,
         valueToCellConverter=self.langSpeakersValue_toCell,
         cellClass=TableCell,
-        cellClassArguments=dict(colors=self.colors),
       ),
       dict(
         title='Ortho. Status',
@@ -145,7 +137,6 @@ class TalkingLeaves:
         title='Missing Chars',
         valueToCellConverter=self.missingValue_toCell,
         cellClass=TableCell,
-        cellClassArguments=dict(colors=self.colors),
       ),
     ]
     for colHeader in self.scriptsColHeaders + self.langsColHeaders:
@@ -804,20 +795,23 @@ class charList(str):
   def listLen(self):
     return len(self.l)
 
-class TableCell(EditTextList2Cell):
+# List of system colours can be found here:
+# NSColorList.colorListNamed_('System').allKeys()
+class Colors:
+  red = utils.getSystemColorByName_('systemRedColor')
+  green = utils.getSystemColorByName_('systemGreenColor')
+  placeholder = utils.getSystemColorByName_('placeholderTextColor')
+  text = utils.getSystemColorByName_('textColor')
 
-  def __init__(self, **kwargs):
-    self.colors = kwargs.pop('colors')
-    super().__init__(**kwargs)
+class TableCell(EditTextList2Cell):
 
   def set(self, value):
     self.editText.set(value)
     if value == "(no data)":
-      self.getNSTextField().setTextColor_(self.colors['placeholder'])
+      self.getNSTextField().setTextColor_(Colors.placeholder)
     elif value == "(complete)":
-      self.getNSTextField().setTextColor_(self.colors['placeholder'])
-    else:
-      self.getNSTextField().setTextColor_(self.colors['text'])
+      self.getNSTextField().setTextColor_(Colors.placeholder)
+
 
 if __name__ == '__main__':
   main()

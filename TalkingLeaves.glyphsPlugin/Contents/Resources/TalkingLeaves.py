@@ -384,7 +384,7 @@ class TalkingLeaves:
         items[-1][columnDescriptions[i]['identifier']] = col
     return items
 
-  def refreshLangs(self, sender):
+  def refreshLangs(self, sender=None):
 
     '''
     Load/reload languages for the currently selected script
@@ -479,7 +479,7 @@ class TalkingLeaves:
     else:
       return value
 
-  def addGlyphsCallback(self, sender):
+  def addGlyphsCallback(self, sender=None):
 
     '''
     Add missing glyphs from selected languages to the font
@@ -514,7 +514,7 @@ class TalkingLeaves:
 
     tab.text = ''.join([f"/{g.name} " for g in newGlyphs])
     tab.setTitle_("New glyphs added")
-    self.refreshLangs(sender)
+    self.refreshLangs()
 
   def scriptsUpdateMenu(self, sender=None):
     self.scriptsMenu = [
@@ -619,25 +619,25 @@ class TalkingLeaves:
     # Auto-enabling is on by default but Vanilla doesn't support it
     self.langsTable._menu.setAutoenablesItems_(False)
 
-  def scriptsCopySelectedRowCallback(self, sender):
+  def scriptsCopySelectedRowCallback(self, sender=None):
     self.copyRows_fromTable_(
       rowIndexes=self.scriptsTable.getSelectedIndexes(),
       table=self.scriptsTable,
     )
 
-  def scriptsCopyAllRowsCallback(self, sender):
+  def scriptsCopyAllRowsCallback(self, sender=None):
     self.copyRows_fromTable_(
       rowIndexes=self.scriptsTable.getArrangedIndexes(),
       table=self.scriptsTable,
     )
 
-  def langsCopySelectedRowsCallback(self, sender):
+  def langsCopySelectedRowsCallback(self, sender=None):
     self.copyRows_fromTable_(
       rowIndexes=self.langsTable.getSelectedIndexes(),
       table=self.langsTable,
     )
 
-  def langsCopyAllRowsCallback(self, sender):
+  def langsCopyAllRowsCallback(self, sender=None):
     self.copyRows_fromTable_(
       rowIndexes=self.langsTable.getArrangedIndexes(),
       table=self.langsTable,
@@ -679,39 +679,39 @@ class TalkingLeaves:
 
     return sorted(list(set(supportedChars)))
 
-  def copyMissingSpaceSeparatedCallback(self, sender):
+  def copyMissingSpaceSeparatedCallback(self, sender=None):
     utils.writePasteboardText_(
       ' '.join(self.getSelectedMissingChars(marksRemoveDottedCircles=False))
     )
 
-  def copyMissingOnePerLineCallback(self, sender):
+  def copyMissingOnePerLineCallback(self, sender=None):
     utils.writePasteboardText_('\n'.join(self.getSelectedMissingChars())+'\n')
 
-  def copyMissingPythonListCallback(self, sender):
+  def copyMissingPythonListCallback(self, sender=None):
     utils.writePasteboardText_(
       '["'+'", "'.join(self.getSelectedMissingChars())+'"]'
     )
 
-  def copyMissingCodepointsUnicode(self, sender):
+  def copyMissingCodepointsUnicode(self, sender=None):
     utils.writePasteboardText_(
       '\n'.join([f"U+{ord(c):04X}" for c in self.getSelectedMissingChars()])
     )
 
-  def copyMissingCodepointsHex(self, sender):
+  def copyMissingCodepointsHex(self, sender=None):
     utils.writePasteboardText_(
       '\n'.join([f"{ord(c):0X}" for c in self.getSelectedMissingChars()])
     )
 
-  def copyMissingCodepointsDec(self, sender):
+  def copyMissingCodepointsDec(self, sender=None):
     utils.writePasteboardText_(
       '\n'.join([str(ord(c)) for c in self.getSelectedMissingChars()])
     )
 
-  def langsSelectSupportedInFontView(self, sender):
+  def langsSelectSupportedInFontView(self, sender=None):
     supported = self.getSelectedSupportedChars()
     self.font.selection = [self.font.glyphs[self.glyphInfoByChar[c].name] for c in supported]
 
-  def langsOpenSupportedInNewTab(self, sender):
+  def langsOpenSupportedInNewTab(self, sender=None):
     selectedLangNames = [r['Language'] for r in self.langsTable.getSelectedItems()]
     supported = self.getSelectedSupportedChars()
     tab = self.font.newTab()
@@ -720,33 +720,33 @@ class TalkingLeaves:
     )
     tab.setTitle_(f"Supported for {', '.join(selectedLangNames)}")
 
-  def langsWikipediaCallback(self, sender):
+  def langsWikipediaCallback(self, sender=None):
     utils.webbrowser.open(
       'https://en.wikipedia.org/w/index.php?search={language} language'.format(
         language=self.langsTable.getSelectedItems()[0]['Language']
       )
     )
 
-  def scriptsWikipediaCallback(self, sender):
+  def scriptsWikipediaCallback(self, sender=None):
     utils.webbrowser.open(
       'https://en.wikipedia.org/w/index.php?search={script} script'.format(
         script=self.scriptsTable.getSelectedItems()[0]['Script']
       )
     )
 
-  def langsSelectionCallback(self, sender):
+  def langsSelectionCallback(self, sender=None):
     self.updateStatusBar()
 
-  def showUnsupportedCallback(self, sender):
-    self.refreshLangs(sender)
+  def showUnsupportedCallback(self, sender=None):
+    self.refreshLangs()
 
-  def showSupportedCallback(self, sender):
-    self.refreshLangs(sender)
+  def showSupportedCallback(self, sender=None):
+    self.refreshLangs()
 
-  def windowBecameKey(self, sender):
-    self.refreshLangs(sender)
+  def windowBecameKey(self, sender=None):
+    self.refreshLangs()
 
-  def openRepoCallback(self, sender):
+  def openRepoCallback(self, sender=None):
     utils.webbrowser.open('https://github.com/justinpenner/TalkingLeaves')
 
   def checkForHyperglotUpdates(self):

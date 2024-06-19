@@ -35,7 +35,7 @@ class GSApplication:
     for glyph in self.glyphData:
       if "unicode" in glyph.attrib and glyph.attrib["unicode"] == codeStr:
         return GSGlyphInfo(code, dict(glyph.attrib))
-    return GSGlyphInfo(code, {"unicode":codeStr})
+    return GSGlyphInfo(code, {"unicode": codeStr})
 
   def localize(self, strings):
     return strings[self.lang]
@@ -43,13 +43,18 @@ class GSApplication:
   def addCallback(self, callback, eventName):
     pass
 
+Glyphs = GSApplication()
+
 class GSDocument:
   def __init__(self, font, filePath):
     self.font = font
     self.filePath = filePath
 
 class GSGlyph:
-  pass
+  def __init__(self, char):
+    self.string = char
+    self.name = Glyphs.glyphInfoForUnicode(ord(char))
+    self.layers = []
 
 class GSGlyphInfo:
   def __init__(self, code, attrib):
@@ -59,7 +64,6 @@ class GSGlyphInfo:
 class Message:
   pass
 
-Glyphs = GSApplication()
 Glyphs.font = GSFont(cfg.glyphsFile)
 Glyphs.font.filepath = cfg.glyphsFile
 Glyphs.currentDocument = GSDocument(Glyphs.font, Glyphs.font.filepath)

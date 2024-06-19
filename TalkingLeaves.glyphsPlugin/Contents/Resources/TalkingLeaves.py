@@ -382,7 +382,7 @@ class TalkingLeaves:
     selected = self.langsTable.getSelectedIndexes()
     newGlyphs = []
     for i in selected:
-      for char in self.langsTable.get()[i]['chars'].split():
+      for char in self.langsTable.get()[i]['chars']:
         newGlyph = GSGlyph(char[-1])
 
         # Skip if codepoint is present in font
@@ -395,14 +395,20 @@ class TalkingLeaves:
         if newGlyph not in newGlyphs:
           newGlyphs.append(newGlyph)
 
-    tab = self.font.newTab()
     for g in newGlyphs:
       self.font.glyphs.append(g)
 
+    # Dev mode can leave early at this point
+    if getattr(Glyphs, "devMode", False):
+      self.refreshLangs()
+      return
+
+    for g in newGlyphs:
       # Try to make glyph from components
       for layer in self.font.glyphs[g.name].layers:
         layer.makeComponents()
 
+    tab = self.font.newTab()
     tab.text = ''.join([f"/{g.name} " for g in newGlyphs])
     tab.setTitle_("New glyphs added")
     self.refreshLangs()
@@ -561,7 +567,7 @@ class TalkingLeaves:
   def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
     chars = []
     rows = self.langsTable.getSelectedItems()
-    # breakpoint()
+
     for row in rows:
       chars += row['chars']
 

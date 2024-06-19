@@ -14,7 +14,8 @@ from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell, dialogs
 )
 from Foundation import NSURL, NSURLSession
-import utils
+import unicodedata2
+import utils, data
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
@@ -82,11 +83,13 @@ class TalkingLeaves:
 
     self.hg = hyperglot.languages.Languages()
     self.hgYaml = dict(hyperglot.languages.Languages())
-    self.scriptsData = self.getScriptsAndSpeakers()
-    self.scripts = list(self.scriptsData.keys())
+    # self.scriptsData = self.getScriptsAndSpeakers()
+    self.data = data.Data()
+    # self.scriptsData = self.data.scriptsAsDict()
+    # self.scripts = list(self.scriptsData.keys())
     self.scriptsLangCount = {}
     self.defaultScriptIndex = 0
-    self.defaultScript = self.scripts[self.defaultScriptIndex]
+    # self.defaultScript = self.scripts[self.defaultScriptIndex]
     self.glyphInfoByChar = {}
     self.charsByGlyphName = {}
     self.allMarks = []
@@ -104,36 +107,53 @@ class TalkingLeaves:
   def startGUI(self):
 
     self.scriptsColHeaders = [
+      # dict(
+      #   identifier='id',
+      #   title='ISO',
+      #   width=60,
+      # ),
       dict(
+        identifier='name',
         title='Script',
         width=100,
       ),
       dict(
+        identifier='speakers',
         title='L1 Speakers',
         width=100,
       ),
     ]
     self.langsColHeaders = [
+      # dict(
+      #   identifier='id',
+      #   title='ISO',
+      #   width=60,
+      # ),
       dict(
+        identifier='name',
         title='Language',
         width=160,
       ),
       dict(
+        identifier='speakers',
         title='L1 Speakers',
         width=100,
         valueToCellConverter=self.langSpeakersValue_toCell,
         cellClass=TableCell,
       ),
       dict(
+        identifier='ortho_status',
         title='Ortho. Status',
         width=94,
       ),
       dict(
+        identifier='lang_status',
         title='Lang. Status',
         width=94,
         valueToCellConverter=self.langStatusValue_toCell,
       ),
       dict(
+        identifier='chars',
         title='Missing Chars',
         valueToCellConverter=self.missingValue_toCell,
         cellClass=TableCell,
@@ -143,7 +163,8 @@ class TalkingLeaves:
       colHeader['maxWidth'] = self.windowSize[0]
       colHeader['minWidth'] = MIN_COLUMN_WIDTH
       colHeader['sortable'] = True
-      colHeader['identifier'] = colHeader['title']
+    # for colHeader in self.langsColHeaders:
+      # colHeader['identifier'] = colHeader['title']
 
     # Build GUI with Vanilla
     self.w = Window(
@@ -237,12 +258,7 @@ class TalkingLeaves:
     Fill script and language lists with initial data
     '''
 
-    scripts = self.tableFrom2dArray_withHeaders_(
-      self.scriptsData.items(),
-      self.scriptsColHeaders,
-    )
-    self.scriptsTable.set(scripts)
-    self.langsTable.set(self.getLangsForScript_(self.defaultScript))
+    self.scriptsTable.set(self.data.scriptsAsTable())
 
     # Fix some UI details…
 
@@ -258,146 +274,19 @@ class TalkingLeaves:
     # Refresh langs when window becomes active
     self.w.bind('became key', self.windowBecameKey)
 
-  def getLangsForScript_(self, script):
-
-    '''
-    Get languages for specified script, and compile data into an object
-    formatted for a vanilla.List2 element
-    '''
-
-    charset = [g.string for g in self.font.glyphs if g.unicode]
-    glyphset = [g.name for g in self.font.glyphs]
-    items = []
-    self.scriptsLangCount[script] = 0
-    self.currentScriptUnsupported = 0
-    self.currentScriptSupported = 0
-
-    for langCode in self.hg.keys():
-
-      lang = getattr(self.hg, langCode)
-      langYaml = self.hgYaml[langCode]
-
-      # Skip languages that don't have any orthographies listed
-      if 'orthographies' not in lang:
-        continue
-
-      orthos = [o for o in lang['orthographies']
-        if o['script'] == script
-      ]
-
-      if len(orthos):
-        self.scriptsLangCount[script] += len(orthos)
-
-      for ortho in orthos:
-
-        # We just need unsupportedChars but it takes a few steps to get there
-        # in somewhat-readable code
-        orthography = hyperglot.orthography.Orthography(ortho)
-        orthoBase = sorted(set(orthography.base_chars))
-        orthoMarks = orthography.base_marks
-
-        # For possible future use
-        # orthoNumerals = list(set(ortho.get('numerals', '')))
-        # orthoPunctuation = list(set(ortho.get('punctuation', '')))
-        # orthoChars = orthoBase + orthoMarks + orthoNumerals + orthoPunctuation
-
-        orthoGlyphNames = [self.glyphInfoForChar_(c).name for c in orthoBase + orthoMarks]
-
-        supportedGlyphNames = []
-        unsupportedGlyphNames = []
-        for g in orthoGlyphNames:
-          if g in glyphset:
-            supportedGlyphNames.append(g)
-          else:
-            unsupportedGlyphNames.append(g)
-
-        supportedChars = [self.charsByGlyphName[g] for g in supportedGlyphNames]
-        unsupportedChars = [self.charsByGlyphName[g] for g in unsupportedGlyphNames]
-
-        # Make display version of (un)supportedChars
-        self.allMarks += orthoMarks
-        def addDottedCircle(c):
-          if c in self.allMarks:
-            return "◌"+c
-          else:
-            return c
-        unsupportedCharsDisplay = [addDottedCircle(c) for c in unsupportedChars]
-        supportedCharsDisplay = [addDottedCircle(c) for c in supportedChars]
-
-        if len(unsupportedChars):
-          self.currentScriptUnsupported += 1
-        else:
-          self.currentScriptSupported += 1
-
-        if (len(unsupportedChars) >= 1 and self.w.showUnsupported.get()) \
-        or (len(unsupportedChars) == 0 and self.w.showSupported.get()):
-          items.append({
-            'ISO': langCode,
-            'Language': lang.get('preferred_name', lang['name']),
-            'L1 Speakers': langYaml.get('speakers', -1),
-            'Ortho. Status': ortho.get('status', ''),
-            'Lang. Status': lang.get('status', ''),
-            'Missing Chars': charList(unsupportedCharsDisplay),
-            'Supported': charList(supportedCharsDisplay),
-          })
-    items = sorted(items, key=lambda x: len(x['Missing Chars']))
-
-    return items
-
-  def glyphInfoForChar_(self, c):
-
-    '''
-    Get glyph info for char, cache results
-    '''
-    if c not in self.glyphInfoByChar:
-      info = Glyphs.glyphInfoForUnicode(ord(c), self.font)
-      self.glyphInfoByChar[c] = info
-      self.charsByGlyphName[info.name] = c
-    return self.glyphInfoByChar[c]
-
-  def getScriptsAndSpeakers(self):
-
-    '''
-    Get script names and speaker counts, return as sorted dict
-    '''
-    scripts = []
-    speakers = {}
-    for lang in self.hg.values():
-      orthos = lang.get('orthographies', [])
-      for ortho in orthos:
-        if ortho['script'] not in scripts:
-          scripts.append(ortho['script'])
-          speakers[ortho['script']] = 0
-        speakers[ortho['script']] += lang.get('speakers', 0)
-    return dict(sorted(speakers.items(), key=lambda x: x[1], reverse=True))
-
-  def tableFrom2dArray_withHeaders_(self, array, columnDescriptions):
-
-    '''
-    Convert a 2D array of data fields and a list of column headers into an
-    object formatted for vanilla.List2
-    '''
-    items = []
-    for row in array:
-      items.append({})
-      for i, col in enumerate(row):
-        items[-1][columnDescriptions[i]['identifier']] = col
-    return items
-
   def refreshLangs(self, sender=None):
 
     '''
     Load/reload languages for the currently selected script
     '''
 
-    if hasattr(self, 'scriptsTable') and len(self.scriptsTable.getSelectedIndexes()):
-      self.currentScript = self.scriptsTable.get()[self.scriptsTable.getSelectedIndexes()[0]]['Script']
-    else:
-      self.currentScript = self.defaultScript
-
-    items = self.getLangsForScript_(self.currentScript)
-    self.langsTable.set(items)
-    self.langsFormatting()
+    rows = self.data.langsAsTable(
+      scriptName=self.scriptsTable.getSelectedItems()[0]['name'],
+      font=self.font,
+      showIncomplete=self.w.showUnsupported.get(),
+      showComplete=self.w.showSupported.get(),
+    )
+    self.langsTable.set(rows)
     self.updateStatusBar()
 
   def updateStatusBar(self):
@@ -406,17 +295,20 @@ class TalkingLeaves:
     Write some useful info in the bottom of the window
     '''
 
+    scriptName = self.scriptsTable.getSelectedItems()[0]['name']
+    self.currentScriptSupported = len(self.data.completeLangs)
+    self.currentScriptUnsupported = len(self.data.incompleteLangs)
+
     self.selectedChars = []
     for i in self.langsTable.getSelectedIndexes():
-      self.selectedChars.extend(self.langsTable.get()[i]['Missing Chars'].split())
+      self.selectedChars.extend(self.langsTable.get()[i]['chars'])
     self.selectedChars = set(self.selectedChars)
 
-    m = "{supported}/{total} = {percent}% {script} supported".format(
-      script=self.currentScript,
-      total=self.scriptsLangCount[self.currentScript],
-      unsupported=self.currentScriptUnsupported,
+    m = "{supported}/{total} = {percent}% {script} completed".format(
+      script=scriptName,
+      total=len(self.data.completeLangs) + len(self.data.incompleteLangs),
       supported=self.currentScriptSupported,
-      percent=self.currentScriptSupported*100//self.scriptsLangCount[self.currentScript],
+      percent=self.currentScriptSupported*100//(len(self.data.completeLangs) + len(self.data.incompleteLangs)),
     )
     langSel = len(self.langsTable.getSelectedIndexes())
     if langSel:
@@ -426,27 +318,6 @@ class TalkingLeaves:
       )
     self.w.statusBar.set(m)
 
-  def langsFormatting(self):
-    # TODO
-    # langs.Speakers==(no data): grey
-    # langs.LangStatus==(no data): grey
-
-    # Spent far too much time trying to figure this out. Next thing to try:
-    # https://github.com/robotools/vanilla/issues/91
-
-    # colIdx = self.langsTable.getNSTableView().columnWithIdentifier_('L1 Speakers')
-    # col = self.langsTable.getNSTableView().tableColumns()[colIdx]
-    # print(col)
-    # col.headerCell().setTextColor_(NSColor.placeholderTextColor())
-    # col.headerCell().setBackgroundColor_(NSColor.colorWithCalibratedRed_green_blue_alpha_(1,0,0,1))
-    # col.setHidden_(True)
-    # print(NSColor.placeholderTextColor())
-    # obj = col.dataCell()
-    # print(obj)
-    # print(type(obj))
-    # for d in sorted(dir(obj)):
-    #   print(d)
-    pass
 
   def langSpeakersValue_toCell(self, value):
 
@@ -469,15 +340,35 @@ class TalkingLeaves:
     else:
       return value
 
-  def missingValue_toCell(self, value):
+  def missingValue_toCell(self, value, displayLimit=50):
 
     '''
-    If no chars are missing, display as "complete"
+    If no chars are missing, display as "complete".
+    Add dotted circle to combining chars.
     '''
-    if value == "":
+    if len(value) == 0:
       return "(complete)"
     else:
-      return value
+      chars = list(value)
+
+      # Truncate to displayLimit
+      if len(chars) > displayLimit:
+        displayChars = chars[:displayLimit]
+      else:
+        displayChars = chars
+
+      # Add dotted circle to marks
+      for i, char in enumerate(displayChars):
+        if unicodedata2.combining(char):
+          displayChars[i] = '◌' + char
+
+      text = ' '.join(displayChars)
+
+      # Add note if truncated
+      if len(chars) > displayLimit:
+        text = f"{text} {chr(0x200e)}(+ {len(chars)-displayLimit} more)"
+
+      return text
 
   def addGlyphsCallback(self, sender=None):
 
@@ -491,7 +382,7 @@ class TalkingLeaves:
     selected = self.langsTable.getSelectedIndexes()
     newGlyphs = []
     for i in selected:
-      for char in self.langsTable.get()[i]['Missing Chars'].split():
+      for char in self.langsTable.get()[i]['chars'].split():
         newGlyph = GSGlyph(char[-1])
 
         # Skip if codepoint is present in font
@@ -539,12 +430,12 @@ class TalkingLeaves:
   def langsUpdateMenu(self, sender=None):
 
     if len(self.langsTable.getSelectedIndexes()) == 1:
-      language = self.langsTable.getSelectedItems()[0]['Language']
+      language = self.langsTable.getSelectedItems()[0]['name']
     else:
       language = 'language'
 
     selectionHasMissingChars = any(
-      len(r['Missing Chars']) for r in self.langsTable.getSelectedItems()
+      len(r['chars']) for r in self.langsTable.getSelectedItems()
     )
     numRowsSelected = len(self.langsTable.getSelectedIndexes())
 
@@ -658,7 +549,7 @@ class TalkingLeaves:
   def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
     missingChars = []
     for row in self.langsTable.getSelectedItems():
-      missingChars += row['Missing Chars'].split()
+      missingChars += row['chars'].split()
 
     if marksRemoveDottedCircles:
       for i,c in enumerate(missingChars):
@@ -670,7 +561,7 @@ class TalkingLeaves:
   def getSelectedSupportedChars(self, marksRemoveDottedCircles=True):
     supportedChars = []
     for row in self.langsTable.getSelectedItems():
-      supportedChars += row['Supported'].split()
+      supportedChars += row['chars'].split()
 
     if marksRemoveDottedCircles:
       for i,c in enumerate(supportedChars):
@@ -730,11 +621,12 @@ class TalkingLeaves:
   def scriptsWikipediaCallback(self, sender=None):
     utils.webbrowser.open(
       'https://en.wikipedia.org/w/index.php?search={script} script'.format(
-        script=self.scriptsTable.getSelectedItems()[0]['Script']
+        script=self.scriptsTable.getSelectedItems()[0]['name']
       )
     )
 
   def langsSelectionCallback(self, sender=None):
+    # self.langs.glyphSetForLang(self.langsTable.getSelectedItems()[0].get()['iso'])
     self.updateStatusBar()
 
   def showUnsupportedCallback(self, sender=None):
@@ -771,29 +663,9 @@ class TalkingLeaves:
           title='Update available',
           OKButton='Dismiss',
         )
-
+  
     utils.getTextFromURL_successfulThen_("https://pypi.org/pypi/hyperglot/json", callback)
 
-class charList(str):
-
-  '''
-  A list of chars that acts like a string, but sorts by the list length.
-  (This is used for the Missing column)
-  '''
-
-  def __new__(self, l):
-    self.l = l
-    return str.__new__(self, ' '.join(l))
-
-  def __init__(self, l):
-    self.l = l
-    self.__str__ = ' '.join(l)
-  
-  def __lt__(self, other):
-    return self.listLen() < other.listLen()
-
-  def listLen(self):
-    return len(self.l)
 
 # List of system colours can be found here:
 # NSColorList.colorListNamed_('System').allKeys()

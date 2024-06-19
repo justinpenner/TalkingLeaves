@@ -1,6 +1,11 @@
-from Foundation import NSPasteboard, NSString, NSURL, NSURLSession, NSColorList
-import json, csv, io, webbrowser
+from AppKit import NSPasteboard, NSString, NSURL, NSURLSession, NSColorList
+import json, csv, io, webbrowser, pathlib
 import GlyphsApp
+
+def bundleResourcesDir(asString=False):
+  if asString:
+    return str(pathlib.Path(__file__).parent)
+  return pathlib.Path(__file__).parent
 
 def parseJson_(text):
   return json.loads(text)

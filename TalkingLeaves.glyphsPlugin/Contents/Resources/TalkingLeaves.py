@@ -410,7 +410,7 @@ class TalkingLeaves:
   def scriptsUpdateMenu(self, sender=None):
     self.scriptsMenu = [
       dict(
-        title=f"Look up {getattr(self,'currentScript',self.defaultScript)} on Wikipedia",
+        title=f"Look up {self.scriptsTable.getSelectedItems()[0]['name']} on Wikipedia",
         enabled=True,
         callback=self.scriptsWikipediaCallback,
       ),
@@ -546,29 +546,39 @@ class TalkingLeaves:
       rows.append(table.get()[i].values())
     utils.writePasteboardText_(utils.csvFromRows_(rows))
 
+  def addDottedCircles(self, chars):
+    for i, char in enumerate(chars):
+      if unicodedata2.combining(char):
+        chars[i] = '◌' + char
+    return chars
+
+  def removeDottedCircles(self, chars):
+    for i, char in enumerate(chars):
+      if len(char) >= 2 and c[0] == '◌':
+        chars[i] = char[1:]
+    return chars
+
   def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
-    missingChars = []
-    for row in self.langsTable.getSelectedItems():
-      missingChars += row['chars'].split()
+    chars = []
+    rows = self.langsTable.getSelectedItems()
+    # breakpoint()
+    for row in rows:
+      chars += row['chars']
 
-    if marksRemoveDottedCircles:
-      for i,c in enumerate(missingChars):
-        if len(c) == 2 and c[0] == '◌':
-          missingChars[i] = missingChars[i][1]
+    if marksRemoveDottedCircles == False:
+      chars = self.addDottedCircles(chars)
 
-    return sorted(list(set(missingChars)))
+    return sorted(list(set(chars)))
 
   def getSelectedSupportedChars(self, marksRemoveDottedCircles=True):
-    supportedChars = []
+    chars = []
     for row in self.langsTable.getSelectedItems():
-      supportedChars += row['chars'].split()
+      chars += row['chars']
 
-    if marksRemoveDottedCircles:
-      for i,c in enumerate(supportedChars):
-        if len(c) == 2 and c[0] == '◌':
-          supportedChars[i] = supportedChars[i][1]
+    if marksRemoveDottedCircles == False:
+      chars = self.addDottedCircles(chars)
 
-    return sorted(list(set(supportedChars)))
+    return sorted(list(set(chars)))
 
   def copyMissingSpaceSeparatedCallback(self, sender=None):
     utils.writePasteboardText_(
@@ -580,7 +590,7 @@ class TalkingLeaves:
 
   def copyMissingPythonListCallback(self, sender=None):
     utils.writePasteboardText_(
-      '["'+'", "'.join(self.getSelectedMissingChars())+'"]'
+      str(self.getSelectedMissingChars())
     )
 
   def copyMissingCodepointsUnicode(self, sender=None):

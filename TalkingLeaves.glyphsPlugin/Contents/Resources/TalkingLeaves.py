@@ -668,7 +668,7 @@ class TalkingLeaves:
 
     def callback(data):
       try:
-        metadata = utils.parseJson_(data.decode('utf-8'))
+        metadata = utils.parseJson_(data)
       except Exception:
         # Not critical, so if anything goes wrong we can just check for updates again on next launch
         return

@@ -132,6 +132,7 @@ class TalkingLeaves:
         title='Lang. Status',
         width=94,
         valueToCellConverter=self.langStatusValue_toCell,
+        cellClass=TableCell,
       ),
       dict(
         title='Missing Chars',
@@ -334,9 +335,9 @@ class TalkingLeaves:
           items.append({
             'ISO': langCode,
             'Language': lang.get('preferred_name', lang['name']),
-            'L1 Speakers': langYaml.get('speakers', -1),
-            'Ortho. Status': ortho.get('status', ''),
-            'Lang. Status': lang.get('status', ''),
+            'L1 Speakers': langYaml.get('speakers', -1) or -1,
+            'Ortho. Status': ortho.get('status', '') or '',
+            'Lang. Status': getattr(lang, 'status', 'living'),
             'Missing Chars': charList(unsupportedCharsDisplay),
             'Supported': charList(supportedCharsDisplay),
           })
@@ -368,7 +369,7 @@ class TalkingLeaves:
         if ortho['script'] not in scripts:
           scripts.append(ortho['script'])
           speakers[ortho['script']] = 0
-        speakers[ortho['script']] += lang.get('speakers', 0)
+        speakers[ortho['script']] += lang.get('speakers', 0) or 0
     return dict(sorted(speakers.items(), key=lambda x: x[1], reverse=True))
 
   def tableFrom2dArray_withHeaders_(self, array, columnDescriptions):

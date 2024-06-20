@@ -56,8 +56,9 @@ class GSGlyphInfo:
     self.name = attrib.get("name", "")
     self.attrib = attrib
 
-class Message:
-  pass
+def Message(message, title='Alert', OKButton=None):
+  print(title)
+  print(message)
 
 Glyphs = GSApplication()
 Glyphs.font = GSFont(cfg.glyphsFile)

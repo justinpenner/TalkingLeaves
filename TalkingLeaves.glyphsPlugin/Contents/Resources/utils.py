@@ -36,3 +36,6 @@ def getSystemColorByName_(name):
   # List of system colours can be found here:
   # NSColorList.colorListNamed_('System').allKeys()
   return NSColorList.colorListNamed_('System').colorWithKey_(name)
+
+def flatten(lists):
+  return [l for ll in lists for l in ll]

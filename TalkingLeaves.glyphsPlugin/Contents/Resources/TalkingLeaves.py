@@ -81,18 +81,8 @@ class TalkingLeaves:
     if getattr(Glyphs, "devMode", False):
       self._addDevTools()
 
-    self.hg = hyperglot.languages.Languages()
-    self.hgYaml = dict(hyperglot.languages.Languages())
-    # self.scriptsData = self.getScriptsAndSpeakers()
     self.data = data.Data()
-    # self.scriptsData = self.data.scriptsAsDict()
-    # self.scripts = list(self.scriptsData.keys())
-    self.scriptsLangCount = {}
     self.defaultScriptIndex = 0
-    # self.defaultScript = self.scripts[self.defaultScriptIndex]
-    self.glyphInfoByChar = {}
-    self.charsByGlyphName = {}
-    self.allMarks = []
     self.fillTables()
 
     self.checkForHyperglotUpdates()
@@ -107,6 +97,7 @@ class TalkingLeaves:
   def startGUI(self):
 
     self.scriptsColHeaders = [
+      # TODO: add ISO column, visible or hidden for indexing only?
       # dict(
       #   identifier='id',
       #   title='ISO',
@@ -124,6 +115,7 @@ class TalkingLeaves:
       ),
     ]
     self.langsColHeaders = [
+      # TODO: add ISO column, visible or hidden for indexing only?
       # dict(
       #   identifier='id',
       #   title='ISO',
@@ -163,8 +155,6 @@ class TalkingLeaves:
       colHeader['maxWidth'] = self.windowSize[0]
       colHeader['minWidth'] = MIN_COLUMN_WIDTH
       colHeader['sortable'] = True
-    # for colHeader in self.langsColHeaders:
-      # colHeader['identifier'] = colHeader['title']
 
     # Build GUI with Vanilla
     self.w = Window(
@@ -181,24 +171,24 @@ class TalkingLeaves:
       selectionCallback=self.refreshLangs,
       menuCallback=self.scriptsUpdateMenu,
     )
-    self.w.showSupported = CheckBox(
+    self.w.showComplete = CheckBox(
       "auto",
       "Show completed",
       sizeStyle="regular",
       value=False,
-      callback=self.showSupportedCallback,
+      callback=self.showCompleteCallback,
     )
-    self.w.showSupported._nsObject.setToolTip_(
+    self.w.showComplete._nsObject.setToolTip_(
       "Show languages whose basic set of Unicode characters is covered by your font. Some languages require additional unencoded glyphs and features."
     )
-    self.w.showUnsupported = CheckBox(
+    self.w.showIncomplete = CheckBox(
       "auto",
       "Show incomplete",
       sizeStyle="regular",
       value=True,
-      callback=self.showUnsupportedCallback,
+      callback=self.showIncompleteCallback,
     )
-    self.w.showUnsupported._nsObject.setToolTip_(
+    self.w.showIncomplete._nsObject.setToolTip_(
       "Show languages whose basic set of Unicode characters is not yet covered by your font."
     )
     self.langsTable = List2(
@@ -234,11 +224,11 @@ class TalkingLeaves:
     self.w.flex = Group("auto")
     rules = [
       "H:|[top]|",
-      "H:|-pad-[statusBar]-gap-[flex(>=pad)]-gap-[showSupported]-gap-[showUnsupported]-gap-[addGlyphs]-gap-[openRepo]-gap-|",
+      "H:|-pad-[statusBar]-gap-[flex(>=pad)]-gap-[showComplete]-gap-[showIncomplete]-gap-[addGlyphs]-gap-[openRepo]-gap-|",
       "V:|[top]-pad-[statusBar]-pad-|",
       "V:|[top]-pad-[flex]-pad-|",
-      "V:|[top]-pad-[showSupported]-pad-|",
-      "V:|[top]-pad-[showUnsupported]-pad-|",
+      "V:|[top]-pad-[showComplete]-pad-|",
+      "V:|[top]-pad-[showIncomplete]-pad-|",
       "V:|[top]-pad-[addGlyphs]-pad-|",
       "V:|[top]-pad-[openRepo]-pad-|",
     ]
@@ -283,8 +273,8 @@ class TalkingLeaves:
     rows = self.data.langsAsTable(
       scriptName=self.scriptsTable.getSelectedItems()[0]['name'],
       font=self.font,
-      showIncomplete=self.w.showUnsupported.get(),
-      showComplete=self.w.showSupported.get(),
+      showIncomplete=self.w.showIncomplete.get(),
+      showComplete=self.w.showComplete.get(),
     )
     self.langsTable.set(rows)
     self.updateStatusBar()
@@ -296,19 +286,19 @@ class TalkingLeaves:
     '''
 
     scriptName = self.scriptsTable.getSelectedItems()[0]['name']
-    self.currentScriptSupported = len(self.data.completeLangs)
-    self.currentScriptUnsupported = len(self.data.incompleteLangs)
+    self.currentScriptComplete = len(self.data.completeLangs)
+    self.currentScriptIncomplete = len(self.data.incompleteLangs)
 
     self.selectedChars = []
     for i in self.langsTable.getSelectedIndexes():
       self.selectedChars.extend(self.langsTable.get()[i]['chars'])
     self.selectedChars = set(self.selectedChars)
 
-    m = "{supported}/{total} = {percent}% {script} completed".format(
+    m = "{completed}/{total} = {percent}% {script} completed".format(
       script=scriptName,
       total=len(self.data.completeLangs) + len(self.data.incompleteLangs),
-      supported=self.currentScriptSupported,
-      percent=self.currentScriptSupported*100//(len(self.data.completeLangs) + len(self.data.incompleteLangs)),
+      completed=self.currentScriptComplete,
+      percent=self.currentScriptComplete*100//(len(self.data.completeLangs) + len(self.data.incompleteLangs)),
     )
     langSel = len(self.langsTable.getSelectedIndexes())
     if langSel:
@@ -318,6 +308,8 @@ class TalkingLeaves:
       )
     self.w.statusBar.set(m)
 
+  def glyphInfoByChar_(self, char):
+    return Glyphs.glyphInfoForUnicode(ord(char))
 
   def langSpeakersValue_toCell(self, value):
 
@@ -325,6 +317,7 @@ class TalkingLeaves:
     Unknown speaker count has already been set to -1, so display it in the
     cell as "no data"
     '''
+
     if value == -1:
       return "(no data)"
     else:
@@ -335,6 +328,7 @@ class TalkingLeaves:
     '''
     Unknown language status is "", so display it as "no data"
     '''
+
     if value == "":
       return "(no data)"
     else:
@@ -346,6 +340,7 @@ class TalkingLeaves:
     If no chars are missing, display as "complete".
     Add dotted circle to combining chars.
     '''
+
     if len(value) == 0:
       return "(complete)"
     else:
@@ -498,16 +493,16 @@ class TalkingLeaves:
         callback=self.langsCopyAllRowsCallback,
       ),
       dict(
-        title='Supported characters',
+        title='Completed characters',
         enabled=True,
         items=[
           dict(
             title='Select in Font View',
-            callback=self.langsSelectSupportedInFontView,
+            callback=self.langsSelectCompleteInFontView,
           ),
           dict(
             title='Open in a new Edit View tab',
-            callback=self.langsOpenSupportedInNewTab,
+            callback=self.langsOpenCompleteInNewTab,
           ),
         ],
       ),
@@ -564,31 +559,39 @@ class TalkingLeaves:
         chars[i] = char[1:]
     return chars
 
-  def getSelectedMissingChars(self, marksRemoveDottedCircles=True):
+  def getSelectedMissingChars(self, marksAddDottedCircles=False):
     chars = []
     rows = self.langsTable.getSelectedItems()
 
     for row in rows:
       chars += row['chars']
 
-    if marksRemoveDottedCircles == False:
+    if marksAddDottedCircles:
       chars = self.addDottedCircles(chars)
 
     return sorted(list(set(chars)))
 
-  def getSelectedSupportedChars(self, marksRemoveDottedCircles=True):
-    chars = []
-    for row in self.langsTable.getSelectedItems():
-      chars += row['chars']
+  def getSelectedCompleteChars(self, marksAddDottedCircles=False):
+    selectedLangNames = [l['name'] for l in self.langsTable.getSelectedItems()]
+    charLists = list(self.data.langs[self.data.langs['name'].isin(selectedLangNames)].loc[:, 'chars'])
 
-    if marksRemoveDottedCircles == False:
+    # Flatten nested lists
+    chars = utils.flatten(charLists)
+
+    # Sort and remove dupes
+    chars = sorted(list(set(chars)))
+
+    # Remove glyphs not present in the font
+    chars = [c for c in chars if c in self.font.glyphs]
+
+    if marksAddDottedCircles:
       chars = self.addDottedCircles(chars)
 
-    return sorted(list(set(chars)))
+    return chars
 
   def copyMissingSpaceSeparatedCallback(self, sender=None):
     utils.writePasteboardText_(
-      ' '.join(self.getSelectedMissingChars(marksRemoveDottedCircles=False))
+      ' '.join(self.getSelectedMissingChars(marksAddDottedCircles=True))
     )
 
   def copyMissingOnePerLineCallback(self, sender=None):
@@ -614,18 +617,18 @@ class TalkingLeaves:
       '\n'.join([str(ord(c)) for c in self.getSelectedMissingChars()])
     )
 
-  def langsSelectSupportedInFontView(self, sender=None):
-    supported = self.getSelectedSupportedChars()
-    self.font.selection = [self.font.glyphs[self.glyphInfoByChar[c].name] for c in supported]
+  def langsSelectCompleteInFontView(self, sender=None):
+    completed = self.getSelectedCompleteChars()
+    self.font.selection = [self.font.glyphs[self.glyphInfoByChar_(c).name] for c in completed]
 
-  def langsOpenSupportedInNewTab(self, sender=None):
-    selectedLangNames = [r['Language'] for r in self.langsTable.getSelectedItems()]
-    supported = self.getSelectedSupportedChars()
+  def langsOpenCompleteInNewTab(self, sender=None):
+    selectedLangNames = [r['name'] for r in self.langsTable.getSelectedItems()]
+    completed = self.getSelectedCompleteChars()
     tab = self.font.newTab()
     tab.text = ''.join(
-      [f"/{self.glyphInfoByChar[c].name} " for c in supported]
+      [f"/{self.glyphInfoByChar_(c).name} " for c in completed]
     )
-    tab.setTitle_(f"Supported for {', '.join(selectedLangNames)}")
+    tab.setTitle_(f"Completed for {', '.join(selectedLangNames)}")
 
   def langsWikipediaCallback(self, sender=None):
     utils.webbrowser.open(
@@ -642,13 +645,12 @@ class TalkingLeaves:
     )
 
   def langsSelectionCallback(self, sender=None):
-    # self.langs.glyphSetForLang(self.langsTable.getSelectedItems()[0].get()['iso'])
     self.updateStatusBar()
 
-  def showUnsupportedCallback(self, sender=None):
+  def showIncompleteCallback(self, sender=None):
     self.refreshLangs()
 
-  def showSupportedCallback(self, sender=None):
+  def showCompleteCallback(self, sender=None):
     self.refreshLangs()
 
   def windowBecameKey(self, sender=None):

@@ -60,7 +60,6 @@ class TalkingLeaves:
       answer = dialogs.message(
         messageText='Incompatible pyobjc version',
         informativeText='pyobjc 10.3 is incompatible with TalkingLeaves because it breaks the Vanilla library. Please upgrade to pyobjc>=10.3.1 and restart Glyphs.',
-        # buttonTitles=[('Dismiss', 0)],
       )
       self._closeAppDevMode()
       return
@@ -85,7 +84,6 @@ class TalkingLeaves:
       dialogs.message(
         messageText='Update required',
         informativeText=message,
-        # buttonTitles=[('Dismiss', 0)],
       )
       self._closeAppDevMode()
       return

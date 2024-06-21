@@ -10,7 +10,7 @@ For many languages, this simply means having the right set of Unicode characters
 
 In the future, TalkingLeaves will help you learn what other features are needed for certain languages, such as additional unencoded glyphs including ligatures and alternate forms, mark attachments, and other positioning and substitution rules.
 
-For example, you can read [issue #16](https://github.com/justinpenner/TalkingLeaves/issues/16) to learn about plans to improve support for Arabic languages, which require unencoded "positional" glyphs that are contextually substituted depending whether they appear at the beginning, middle, or end of a word.
+For example, you can read [issue #16](https://github.com/justinpenner/TalkingLeaves/issues/16) to learn about plans to improve support for Arabic languages, which require unencoded “positional” glyphs that are contextually substituted depending whether they appear at the beginning, middle, or end of a word.
 
 For now, do not rely on TalkingLeaves to *confirm* which languages your font already supports. This can realistically only be done by analyzing your exported font file, checking its glyph set and the behaviour of its OpenType features. A rigorous check to confirm language support would include running it through both [Hyperglot](https://github.com/rosettatype/hyperglot/) and [Shaperglot](https://github.com/googlefonts/shaperglot/), and potentially more research for certain languages.
 
@@ -30,7 +30,7 @@ Those answers, of course, may change and grow as more languages are added to the
 
 ## Installation
 
-TalkingLeaves requires some dependencies that need to be installed via Python's `pip` package manager. This is currently tricky because most Glyphs users are using the "GlyphsPython" module, which is a Python framework that doesn't come with a working copy of `pip`. So we'll need to install Python first if you don't already have it.
+TalkingLeaves requires some dependencies that need to be installed via Python’s `pip` package manager. This is currently tricky because most Glyphs users are using the GlyphsPython module, which is a Python framework that doesn’t come with a working copy of `pip`. So we’ll need to install Python first if you don’t already have it.
 
 ### Install Python and pip
 
@@ -42,15 +42,15 @@ You can install Python via [Python.org](https://www.python.org/), or use a packa
 > Make sure _GlyphsPython_ is selected in _Glyphs > Preferences > Addons_, and take note of the GlyphsPython version number.
 > Run the following command in Terminal, replacing `3.11.9` with your GlyphsPython version number.
 
-	pip3 install --python-version=3.11.9 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot
+	pip3 install --python-version=3.11.9 --only-binary=:all: --target="/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages" --upgrade hyperglot pandas
 
 > [!NOTE]
-> * `--python-version` tells pip to find packages for the Python version that you’re using in Glyphs.
-> * `--only-binary` disallows source packages and is required when using `--python-version`.
+> * `--python-version` tells pip to find packages for the specified Python version that you’re using in Glyphs.
+> * `--only-binary` disallows build-from-source packages and is required when using `--python-version`.
 > * `--target` installs the packages in a Glyphs-only location, and keeps them out of your `pip list`.
 
 > [!WARNING]
-> I recommend sticking with GlyphsPython in _Glyphs > Preferences > Addons_, but if you need to use another Python, you may need to delete the contents of `~/Library/Application Support/Glyphs 3/Scripts/site-packages` and then install the dependencies again with the new Python version number. You'll also need to install `pyobjc==10.2`.
+> I recommend sticking with GlyphsPython in _Glyphs > Preferences > Addons_, but if you need to use another Python, you may need to delete the contents of `~/Library/Application Support/Glyphs 3/Scripts/site-packages` and then install the dependencies again with the new Python version number. You’ll also need to install `pyobjc`.
 
 ### Install TalkingLeaves plugin
 
@@ -61,8 +61,8 @@ Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock.
 * [ ] Make installing dependencies easier for less-technical users.
 * [ ] Add information about unencoded/alternate glyphs that may be required for some languages (complex scripts, local forms).
 * [ ] Build TalkingLeaves plugins for other font editors, and possibly a web interface (contact me if you’re interested in helping/supporting this!)
-* [ ] Add a "more data" toggle for the languages table that shows some additional data fields.
-* [ ] Highlight glyphs in the "Missing" column that are composites and are composable from the user's existing glyph set.
+* [ ] Add a “more data” toggle for the languages table that shows some additional data fields.
+* [ ] Highlight glyphs in the “Missing” column that are composites and are composable from the user’s existing glyph set.
 * [ ] Add more language data sources, such as shaperglot/gflanguages.
 * [ ] Consider other ways of visualizing and navigating through languages, instead of by script, such as by region or by language family.
 
@@ -70,11 +70,11 @@ Drag *TalkingLeaves.glyphsPlugin* and drop it onto the Glyphs icon in your dock.
 
 If you have any ideas, bug reports, or other requests, I would love to hear them! You can file an [issue](https://github.com/justinpenner/TalkingLeaves/issues), or send me an email or a DM. You can find various ways to contact me at [justinpenner.ca](https://justinpenner.ca/).
 
-The database of languages that powers TalkingLeaves comes from Hyperglot, an open-source project by Rosetta Type. If you want to contribute, see [https://github.com/rosettatype/hyperglot/](https://github.com/rosettatype/hyperglot/)
+The database of languages that powers TalkingLeaves comes from Hyperglot, an open-source project by [Rosetta Type](https://rosettatype.com/). If you want to contribute, see [https://github.com/rosettatype/hyperglot/](https://github.com/rosettatype/hyperglot/)
 
 ## Related resources
 
-- [Hyperglot](https://hyperglot.rosettatype.com/) web interface to check fonts for language support, and explore Hyperglot’s database of languages and writing systems.
+- [Hyperglot](https://hyperglot.rosettatype.com/): web interface to check fonts for language support, and explore Hyperglot’s database of languages and writing systems.
 - [Hyperglot @ Github](https://github.com/rosettatype/hyperglot/)
-- [Shaperglot](https://github.com/googlefonts/shaperglot/) another tool for checking language support similar to Hyperglot, but was originally initiated with the intent of checking OpenType features for languages that need more than just a minimum character set. Now Hyperglot and Shaperglot both have some ability to check OpenType features.
-- [gflanguages](https://github.com/googlefonts/lang/) the language database behind Shaperglot.
+- [Shaperglot](https://github.com/googlefonts/shaperglot/): another tool for checking language support similar to Hyperglot, but was originally initiated with the intent of checking OpenType features for languages that need more than just a minimum character set. Now Hyperglot and Shaperglot both have some ability to check OpenType features.
+- [gflanguages](https://github.com/googlefonts/lang/): the language database behind Shaperglot.

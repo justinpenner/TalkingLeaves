@@ -4,6 +4,7 @@ import utils
 
 
 class Data:
+
   '''
   Collection of languages and scripts.
   '''
@@ -76,8 +77,7 @@ class DataSourceHyperglot(DataSource):
     import hyperglot.language
     import hyperglot.orthography
 
-    with open(utils.bundleResourcesDir() / "hyperglot-script-names.yaml") as f:
-      self._scriptNames = yaml.load(f, Loader=yaml.Loader)
+    self._scriptNames = hyperglot.orthography.get_scripts()
 
     hg = hyperglot.languages.Languages()
     for iso in hg.keys():
@@ -87,15 +87,25 @@ class DataSourceHyperglot(DataSource):
 
         scriptId = self._scriptNameToIso(ortho.script)
         langId = f"{iso}_{scriptId}"
+
+        # Hyperglot's Language class uses dict for raw data
+        # and attributes for cleaned data.
+
+        # We need raw data in some cases, i.e. to distinguish between 0 and 
+        # None for speakers, so the user can see whether speakers is explicitly
+        # zero, or there's no data. Similarly, status defaults to 'living'
+        # if undefined, but we will take a slightly different approach by 
+        # assuming 'living' only if speakers is > 0.
+
+        speakers = -1 if lang['speakers'] is None else lang.speakers
         self.langs[langId] = dict(
           id=langId,
           iso=iso,
           name=lang.get_name(),
-          # script=ortho.script,
           scriptId=self._scriptNameToIso(ortho.script),
-          lang_status=lang.get('status', ''),
-          ortho_status=ortho.get('status', ''),
-          speakers=hg[iso].get('speakers', -1),
+          lang_status='' if lang['status'] is None and speakers <= 0 else lang.status,
+          ortho_status='' if ortho['status'] is None else ortho.status,
+          speakers=speakers,
           chars=sorted(set(ortho.base_chars)) + sorted(set(ortho.base_marks)),
         )
 
@@ -103,10 +113,10 @@ class DataSourceHyperglot(DataSource):
           self.scripts[scriptId] = dict(
             id=scriptId,
             name=ortho.script,
-            speakers=lang.get('speakers', 0),
+            speakers=lang.get('speakers', 0) or 0,
           )
         elif self.langs[langId]['ortho_status'] == 'primary':
-          self.scripts[scriptId]['speakers'] += lang.get('speakers', 0)
+          self.scripts[scriptId]['speakers'] += lang.get('speakers', 0) or 0
 
   def _scriptNameToIso(self, name):
     if name not in self._scriptNames:

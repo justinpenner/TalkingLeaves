@@ -35,6 +35,7 @@ try:
 except ModuleNotFoundError:
   hyperglot = None
 
+HYPERGLOT_MIN_VER = "0.6.4"
 MIN_COLUMN_WIDTH = 20
 
 def main():
@@ -53,14 +54,18 @@ class TalkingLeaves:
 
   def __init__(self):
 
+    # Warn user and cancel startup if incompatible pyobjc version is installed
     import objc
     if objc.__version__ == "10.3":
       answer = dialogs.message(
         messageText='Incompatible pyobjc version',
         informativeText='pyobjc 10.3 is incompatible with TalkingLeaves because it breaks the Vanilla library. Please upgrade to pyobjc>=10.3.1 and restart Glyphs.',
+        # buttonTitles=[('Dismiss', 0)],
       )
+      self._closeAppDevMode()
       return
 
+    # Warn user and cancel startup if Hyperglot is not installed
     if not hyperglot:
       answer = dialogs.ask(
         messageText='Hyperglot module is missing',
@@ -69,7 +74,22 @@ class TalkingLeaves:
       )
       if answer:
         utils.webbrowser.open('https://github.com/justinpenner/TalkingLeaves#installation')
+      self._closeAppDevMode()
       return
+
+    # Warn user and cancel startup if minimum Hyperglot is not met
+    elif utils.SimpleVersion(hyperglot.__version__) < utils.SimpleVersion(HYPERGLOT_MIN_VER):
+      import sys
+      pythonVersion = '.'.join([str(x) for x in sys.version_info][:3])
+      message = f"Hyperglot >= {HYPERGLOT_MIN_VER} is required, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip3 install --python-version={pythonVersion} --only-binary=:all: --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" --upgrade hyperglot\n\nThen, restart Glyphs."
+      dialogs.message(
+        messageText='Update required',
+        informativeText=message,
+        # buttonTitles=[('Dismiss', 0)],
+      )
+      self._closeAppDevMode()
+      return
+
 
     self.font = Glyphs.font
     self.windowSize = (1000, 600)
@@ -86,6 +106,12 @@ class TalkingLeaves:
     self.fillTables()
 
     self.checkForHyperglotUpdates()
+
+  def _closeAppDevMode(self):
+    if getattr(Glyphs, "devMode", False):
+      from AppKit import NSApplication
+      app = NSApplication.sharedApplication()
+      app.terminate_(self)
 
   def _addDevTools(self):
     # Add menu item with Cmd-W shortcut to easily close window
@@ -137,12 +163,15 @@ class TalkingLeaves:
         identifier='ortho_status',
         title='Ortho. Status',
         width=94,
+        valueToCellConverter=self.statusValue_toCell,
+        cellClass=TableCell,
       ),
       dict(
         identifier='lang_status',
         title='Lang. Status',
         width=94,
-        valueToCellConverter=self.langStatusValue_toCell,
+        valueToCellConverter=self.statusValue_toCell,
+        cellClass=TableCell,
       ),
       dict(
         identifier='chars',
@@ -323,10 +352,10 @@ class TalkingLeaves:
     else:
       return value
 
-  def langStatusValue_toCell(self, value):
+  def statusValue_toCell(self, value):
 
     '''
-    Unknown language status is "", so display it as "no data"
+    Unknown status is "", so display it as "no data"
     '''
 
     if value == "":

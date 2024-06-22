@@ -1,6 +1,7 @@
 import yaml
 import pandas as pd
 import utils
+from GlyphsApp import Glyphs
 
 
 class Data:
@@ -48,7 +49,10 @@ class Data:
 
     # Keep only chars that are missing from the font
     for y in frame.index:
-      frame.at[y, 'chars'] = CharList([c for c in frame.at[y, 'chars'] if c not in font.glyphs])
+      frame.at[y, 'chars'] = CharList([
+        c for c in frame.at[y, 'chars']
+        if Glyphs.glyphInfoForUnicode(ord(c), font).name not in font.glyphs
+      ])
 
     # Optionally hide langs with incomplete/complete char sets
     self.completeLangs = frame[frame['chars'] == '']
@@ -57,6 +61,8 @@ class Data:
       frame = self.completeLangs
     if showComplete == False:
       frame = self.incompleteLangs
+
+    frame = frame.sort_values('chars')
 
     return self.tableFromFrame(frame)
 

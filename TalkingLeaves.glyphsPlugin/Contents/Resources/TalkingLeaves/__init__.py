@@ -15,7 +15,8 @@ from vanilla import (
 )
 from Foundation import NSURL, NSURLSession
 import unicodedata2
-import utils, data
+import TalkingLeaves.utils as utils
+import TalkingLeaves.data as data
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:

@@ -1,6 +1,6 @@
 import yaml
 import pandas as pd
-import utils
+import TalkingLeaves.utils as utils
 from GlyphsApp import Glyphs
 
 

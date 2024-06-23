@@ -730,7 +730,7 @@ class TableCell(EditTextList2Cell):
     elif value == "(complete)":
       self.getNSTextField().setTextColor_(Colors.placeholder)
     else:
-      self.getNSTextField().setTextColor_(Colors.text)
+      self.getNSTextField().setTextColor_(None)
 
 
 if __name__ == '__main__':

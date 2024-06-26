@@ -88,11 +88,12 @@ class DataSourceHyperglot(DataSource):
     hg = hyperglot.languages.Languages()
     for iso in hg.keys():
       lang = hyperglot.language.Language(iso)
-      for orthoData in lang.get('orthographies', []):
+      for i, orthoData in enumerate(lang.get('orthographies', [])):
         ortho = hyperglot.orthography.Orthography(orthoData)
 
         scriptId = self._scriptNameToIso(ortho.script)
-        langId = f"{iso}_{scriptId}"
+
+        langId = f"{iso}_{i}_{scriptId}"
 
         # Hyperglot's Language class uses dict for raw data
         # and attributes for cleaned data.

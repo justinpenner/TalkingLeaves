@@ -82,8 +82,9 @@ class DataSourceHyperglot(DataSource):
     import hyperglot.languages
     import hyperglot.language
     import hyperglot.orthography
+    from hyperglot.loader import load_scripts_data
 
-    self._scriptNames = hyperglot.orthography.get_scripts()
+    self._scriptNames = load_scripts_data()
 
     hg = hyperglot.languages.Languages()
     for iso in hg.keys():

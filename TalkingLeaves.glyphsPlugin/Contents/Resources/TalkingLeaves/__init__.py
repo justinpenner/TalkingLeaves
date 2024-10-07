@@ -36,7 +36,7 @@ try:
 except ModuleNotFoundError:
   hyperglot = None
 
-HYPERGLOT_MIN_VER = "0.6.4"
+HYPERGLOT_MIN_VER = "0.7.0"
 MIN_COLUMN_WIDTH = 20
 
 def main():
@@ -700,7 +700,7 @@ class TalkingLeaves:
       except Exception:
         # Not critical, so if anything goes wrong we can just check for updates again on next launch
         return
-      if metadata['info']['version'] != hyperglot.__version__:
+      if utils.SimpleVersion(metadata['info']['version']) > utils.SimpleVersion(hyperglot.__version__):
         import sys
         pythonVersion = '.'.join([str(x) for x in sys.version_info][:3])
         message = f"Hyperglot {metadata['info']['version']} is now available, but you have {hyperglot.__version__}.\n\nTo update, copy the following command, then paste it into Terminal:\n\npip3 install --python-version={pythonVersion} --only-binary=:all: --target=\"/Users/$USER/Library/Application Support/Glyphs 3/Scripts/site-packages\" --upgrade hyperglot\n\nThen, restart Glyphs."

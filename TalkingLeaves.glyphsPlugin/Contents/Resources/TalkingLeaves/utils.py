@@ -22,6 +22,8 @@ class SimpleVersion:
     for i, p in enumerate(self.parts):
       if p < other.parts[i]:
         return True
+      if p > other.parts[i]:
+        return False
 
 def bundleResourcesDir(asString=False):
   if asString:

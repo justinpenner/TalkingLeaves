@@ -14,7 +14,7 @@ from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell, dialogs
 )
 from Foundation import NSURL, NSURLSession
-import unicodedata2
+import unicodedata
 import TalkingLeaves.utils as utils
 import TalkingLeaves.data as data
 
@@ -382,7 +382,7 @@ class TalkingLeaves:
 
       # Add dotted circle to marks
       for i, char in enumerate(displayChars):
-        if unicodedata2.combining(char):
+        if unicodedata.combining(char):
           displayChars[i] = '◌' + char
 
       text = ' '.join(displayChars)
@@ -577,7 +577,7 @@ class TalkingLeaves:
 
   def addDottedCircles(self, chars):
     for i, char in enumerate(chars):
-      if unicodedata2.combining(char):
+      if unicodedata.combining(char):
         chars[i] = '◌' + char
     return chars
 

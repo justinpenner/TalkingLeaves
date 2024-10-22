@@ -9,18 +9,16 @@ this file, like you normally do when you're developing a plugin.
 '''
 
 import sys
-from GlyphsApp import *
+from GlyphsApp import Glyphs, GSGlyph, Message
 from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell, dialogs
 )
-from Foundation import NSURL, NSURLSession
 import unicodedata
 import TalkingLeaves.utils as utils
 import TalkingLeaves.data as data
 
 # Tell older Glyphs where to find dependencies
 if Glyphs.versionNumber < 3.2:
-  import sys
   from pathlib import Path
   PKGS_PATH = str(Path('~/Library/Application Support/Glyphs 3/Scripts/site-packages').expanduser())
   if PKGS_PATH not in sys.path:
@@ -38,6 +36,7 @@ except ModuleNotFoundError:
 
 HYPERGLOT_MIN_VER = "0.7.0"
 MIN_COLUMN_WIDTH = 20
+
 
 def main():
 
@@ -70,7 +69,7 @@ class TalkingLeaves:
       answer = dialogs.ask(
         messageText='Hyperglot module is missing',
         informativeText='Follow the installation instructions at https://github.com/justinpenner/TalkingLeaves#installation',
-        buttonTitles=[(f'Open in browser', 1), ('Cancel', 0)],
+        buttonTitles=[('Open in browser', 1), ('Cancel', 0)],
       )
       if answer:
         utils.webbrowser.open('https://github.com/justinpenner/TalkingLeaves#installation')
@@ -95,7 +94,7 @@ class TalkingLeaves:
 
     self.startGUI()
 
-    # Stand-alone developer mode uses a "fake" GlyphsApp API for testing 
+    # Stand-alone developer mode uses a "fake" GlyphsApp API for testing
     # without opening GlyphsApp.
     if getattr(Glyphs, "devMode", False):
       self._addDevTools()
@@ -326,7 +325,7 @@ class TalkingLeaves:
       script=scriptName,
       total=len(self.data.completeLangs) + len(self.data.incompleteLangs),
       completed=self.currentScriptComplete,
-      percent=self.currentScriptComplete*100//(len(self.data.completeLangs) + len(self.data.incompleteLangs)),
+      percent=self.currentScriptComplete * 100 // (len(self.data.completeLangs) + len(self.data.incompleteLangs)),
     )
     langSel = len(self.langsTable.getSelectedIndexes())
     if langSel:
@@ -583,7 +582,7 @@ class TalkingLeaves:
 
   def removeDottedCircles(self, chars):
     for i, char in enumerate(chars):
-      if len(char) >= 2 and c[0] == '◌':
+      if len(char) >= 2 and char[0] == '◌':
         chars[i] = char[1:]
     return chars
 
@@ -600,7 +599,7 @@ class TalkingLeaves:
     return sorted(list(set(chars)))
 
   def getSelectedCompleteChars(self, marksAddDottedCircles=False):
-    selectedLangNames = [l['name'] for l in self.langsTable.getSelectedItems()]
+    selectedLangNames = [lang['name'] for lang in self.langsTable.getSelectedItems()]
     charLists = list(self.data.langs[self.data.langs['name'].isin(selectedLangNames)].loc[:, 'chars'])
 
     # Flatten nested lists
@@ -623,7 +622,7 @@ class TalkingLeaves:
     )
 
   def copyMissingOnePerLineCallback(self, sender=None):
-    utils.writePasteboardText_('\n'.join(self.getSelectedMissingChars())+'\n')
+    utils.writePasteboardText_('\n'.join(self.getSelectedMissingChars()) + '\n')
 
   def copyMissingPythonListCallback(self, sender=None):
     utils.writePasteboardText_(
@@ -709,7 +708,7 @@ class TalkingLeaves:
           title='Update available',
           OKButton='Dismiss',
         )
-  
+
     utils.getTextFromURL_successfulThen_("https://pypi.org/pypi/hyperglot/json", callback)
 
 
@@ -720,6 +719,7 @@ class Colors:
   green = utils.getSystemColorByName_('systemGreenColor')
   placeholder = utils.getSystemColorByName_('placeholderTextColor')
   text = utils.getSystemColorByName_('textColor')
+
 
 class TableCell(EditTextList2Cell):
 

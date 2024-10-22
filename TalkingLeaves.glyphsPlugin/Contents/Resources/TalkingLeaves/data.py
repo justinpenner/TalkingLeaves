@@ -1,6 +1,4 @@
-import yaml
 import pandas as pd
-import TalkingLeaves.utils as utils
 from GlyphsApp import Glyphs
 
 
@@ -25,7 +23,7 @@ class Data:
     self.scripts = pd.DataFrame(ds.scripts.values())
 
   def scriptsAsDict(self):
-    frame = self.scripts.filter(['name','speakers']).sort_values('speakers', ascending=False)
+    frame = self.scripts.filter(['name', 'speakers']).sort_values('speakers', ascending=False)
     table = frame.values.tolist()
     return dict(table)
 
@@ -57,9 +55,9 @@ class Data:
     # Optionally hide langs with incomplete/complete char sets
     self.completeLangs = frame[frame['chars'] == '']
     self.incompleteLangs = frame[frame['chars'] != '']
-    if showIncomplete == False:
+    if not showIncomplete:
       frame = self.completeLangs
-    if showComplete == False:
+    if not showComplete:
       frame = self.incompleteLangs
 
     frame = frame.sort_values('chars')
@@ -99,10 +97,10 @@ class DataSourceHyperglot(DataSource):
         # Hyperglot's Language class uses dict for raw data
         # and attributes for cleaned data.
 
-        # We need raw data in some cases, i.e. to distinguish between 0 and 
+        # We need raw data in some cases, i.e. to distinguish between 0 and
         # None for speakers, so the user can see whether speakers is explicitly
         # zero, or there's no data. Similarly, status defaults to 'living'
-        # if undefined, but we will take a slightly different approach by 
+        # if undefined, but we will take a slightly different approach by
         # assuming 'living' only if speakers is > 0.
 
         speakers = -1 if lang['speakers'] is None else lang.speakers
@@ -139,9 +137,9 @@ class CharList(str):
   (This is used for the Missing column)
   '''
 
-  def __new__(self, l):
-    return str.__new__(self, ''.join(l))
-  
+  def __new__(self, li):
+    return str.__new__(self, ''.join(li))
+
   def __lt__(self, other):
     return len(self) < len(other)
 

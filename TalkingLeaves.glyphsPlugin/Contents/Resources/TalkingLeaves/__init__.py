@@ -660,7 +660,7 @@ class TalkingLeaves:
   def langsWikipediaCallback(self, sender=None):
     utils.webbrowser.open(
       'https://en.wikipedia.org/w/index.php?search={language} language'.format(
-        language=self.langsTable.getSelectedItems()[0]['Language']
+        language=self.langsTable.getSelectedItems()[0]['name']
       )
     )
 

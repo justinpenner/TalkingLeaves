@@ -49,7 +49,7 @@ class Data:
     charset = {g.string for g in font.glyphs if g.unicode}
     glyphNames = {g.name for g in font.glyphs}
     missingCache = {}
-    totalChars = sum(len(chars) for chars in frame['chars'])
+    totalChars = len(set(c for chars in frame['chars'] for c in chars))
     processedChars = 0
     lastProgressUpdate = 0
 
@@ -59,18 +59,20 @@ class Data:
     for y in frame.index:
       missingChars = []
       for c in frame.at[y, 'chars']:
+        if c not in missingCache:
+          processedChars += 1
+          if (
+            progressCallback and (
+            processedChars == totalChars or
+            processedChars == 1 or
+            time.perf_counter() - lastProgressUpdate >= 0.03
+            )
+          ):
+            progressCallback('Scanning characters', processedChars, totalChars)
+            lastProgressUpdate = time.perf_counter()
+
         if self.charMissingFromFont_(c, font, charset, glyphNames, missingCache):
           missingChars.append(c)
-        processedChars += 1
-        if (
-          progressCallback and (
-          processedChars == totalChars or
-          processedChars == 1 or
-          time.perf_counter() - lastProgressUpdate >= 0.03
-          )
-        ):
-          progressCallback('Scanning characters', processedChars, totalChars)
-          lastProgressUpdate = time.perf_counter()
       frame.at[y, 'chars'] = CharList(missingChars)
 
     # Optionally hide langs with incomplete/complete char sets

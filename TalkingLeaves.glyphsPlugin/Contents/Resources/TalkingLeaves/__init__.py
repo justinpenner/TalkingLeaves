@@ -9,7 +9,10 @@ this file, like you normally do when you're developing a plugin.
 '''
 
 import sys
+import time
+from collections import OrderedDict
 from GlyphsApp import Glyphs, GSGlyph, Message
+from Foundation import NSDate, NSRunLoop
 from vanilla import (
   Window, Group, List2, Button, HelpButton, SplitView, CheckBox, TextBox, EditTextList2Cell, dialogs
 )
@@ -91,6 +94,9 @@ class TalkingLeaves:
 
     self.font = Glyphs.font
     self.windowSize = (1000, 600)
+    self._lastFontCoverageSignature = None
+    self._allLangRows = []
+    self._langRowsCache = OrderedDict()
 
     self.startGUI()
 
@@ -297,13 +303,34 @@ class TalkingLeaves:
     Load/reload languages for the currently selected script
     '''
 
-    rows = self.data.langsAsTable(
-      scriptName=self.scriptsTable.getSelectedItems()[0]['name'],
-      font=self.font,
-      showIncomplete=self.w.showIncomplete.get(),
-      showComplete=self.w.showComplete.get(),
-    )
-    self.langsTable.set(rows)
+    scriptName = self.scriptsTable.getSelectedItems()[0]['name']
+    fontCoverageSignature = self.fontCoverageSignature_()
+    cacheKey = (fontCoverageSignature, scriptName)
+    self._lastFontCoverageSignature = fontCoverageSignature
+    self._langsLoadStart = time.perf_counter()
+    loadedFromCache = False
+
+    if cacheKey in self._langRowsCache:
+      self._allLangRows = self._langRowsCache.pop(cacheKey)
+      self._langRowsCache[cacheKey] = self._allLangRows
+      loadedFromCache = True
+    else:
+      rows = self.data.langsAsTable(
+        scriptName=scriptName,
+        font=self.font,
+        showIncomplete=True,
+        showComplete=True,
+        progressCallback=lambda phase, completed, total: self.updateLoadProgress_(scriptName, phase, completed, total),
+      )
+      self.updateLoadProgress_(scriptName, 'Rendering table', 0, 1)
+      self._allLangRows = rows
+      self._langRowsCache[cacheKey] = rows
+      while len(self._langRowsCache) > 3:
+        self._langRowsCache.popitem(last=False)
+
+    self.langsTable.set(self.filteredLangRows())
+    if not loadedFromCache:
+      self.updateLoadProgress_(scriptName, 'Rendering table', 1, 1)
     self.updateStatusBar()
 
   def updateStatusBar(self):
@@ -335,8 +362,41 @@ class TalkingLeaves:
       )
     self.w.statusBar.set(m)
 
+  def updateLoadProgress_(self, scriptName, phase, completedUnits, totalUnits):
+
+    '''
+    Show a status message once language loading is slow enough to be visible.
+    '''
+
+    if time.perf_counter() - self._langsLoadStart < 0.2:
+      return
+
+    percent = 100 if totalUnits == 0 else completedUnits * 100 / totalUnits
+    self.w.statusBar.set(f"Loading {scriptName}: {phase} {percent:.1f}%")
+    self.w.statusBar._nsObject.displayIfNeeded()
+    NSRunLoop.currentRunLoop().runUntilDate_(NSDate.dateWithTimeIntervalSinceNow_(0.01))
+
   def glyphInfoByChar_(self, char):
     return Glyphs.glyphInfoForUnicode(ord(char))
+
+  def fontCoverageSignature_(self):
+    charset = frozenset(g.string for g in self.font.glyphs if g.unicode)
+    glyphNames = frozenset(g.name for g in self.font.glyphs)
+    return (charset, glyphNames)
+
+  def filteredLangRows(self):
+    showIncomplete = self.w.showIncomplete.get()
+    showComplete = self.w.showComplete.get()
+
+    rows = []
+    for row in self._allLangRows:
+      isComplete = row['chars'] == ''
+      if isComplete and not showComplete:
+        continue
+      if not isComplete and not showIncomplete:
+        continue
+      rows.append(row)
+    return rows
 
   def langSpeakersValue_toCell(self, value):
 
@@ -675,13 +735,16 @@ class TalkingLeaves:
     self.updateStatusBar()
 
   def showIncompleteCallback(self, sender=None):
-    self.refreshLangs()
+    self.langsTable.set(self.filteredLangRows())
+    self.updateStatusBar()
 
   def showCompleteCallback(self, sender=None):
-    self.refreshLangs()
+    self.langsTable.set(self.filteredLangRows())
+    self.updateStatusBar()
 
   def windowBecameKey(self, sender=None):
-    self.refreshLangs()
+    if self.fontCoverageSignature_() != self._lastFontCoverageSignature:
+      self.refreshLangs()
 
   def openRepoCallback(self, sender=None):
     utils.webbrowser.open('https://github.com/justinpenner/TalkingLeaves')

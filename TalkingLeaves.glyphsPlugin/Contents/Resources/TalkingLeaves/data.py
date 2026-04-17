@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 from GlyphsApp import Glyphs
 
@@ -40,29 +41,74 @@ class Data:
       self.scripts.filter(['name', 'speakers']).sort_values('speakers', ascending=False)
     )
 
-  def langsAsTable(self, scriptName, font, showIncomplete, showComplete):
+  def langsAsTable(self, scriptName, font, showIncomplete, showComplete, progressCallback=None):
     scriptId = self.scripts[self.scripts['name'] == scriptName].reset_index().at[0, 'id']
     frame = self.langs[self.langs['scriptId'] == scriptId]
     frame = frame.filter(['name', 'speakers', 'ortho_status', 'lang_status', 'chars'])
 
+    charset = {g.string for g in font.glyphs if g.unicode}
+    glyphNames = {g.name for g in font.glyphs}
+    missingCache = {}
+    totalChars = sum(len(chars) for chars in frame['chars'])
+    processedChars = 0
+    lastProgressUpdate = 0
+
+    self.updateProgress_(progressCallback, 'Scanning characters', 0, totalChars)
+
     # Keep only chars that are missing from the font
     for y in frame.index:
-      frame.at[y, 'chars'] = CharList([
-        c for c in frame.at[y, 'chars']
-        if Glyphs.glyphInfoForUnicode(ord(c), font).name not in font.glyphs
-      ])
+      missingChars = []
+      for c in frame.at[y, 'chars']:
+        if self.charMissingFromFont_(c, font, charset, glyphNames, missingCache):
+          missingChars.append(c)
+        processedChars += 1
+        if (
+          progressCallback and (
+          processedChars == totalChars or
+          processedChars == 1 or
+          time.perf_counter() - lastProgressUpdate >= 0.03
+          )
+        ):
+          progressCallback('Scanning characters', processedChars, totalChars)
+          lastProgressUpdate = time.perf_counter()
+      frame.at[y, 'chars'] = CharList(missingChars)
 
     # Optionally hide langs with incomplete/complete char sets
+    self.updateProgress_(progressCallback, 'Filtering languages', 0, 2)
     self.completeLangs = frame[frame['chars'] == '']
     self.incompleteLangs = frame[frame['chars'] != '']
+    self.updateProgress_(progressCallback, 'Filtering languages', 1, 2)
     if not showIncomplete:
       frame = self.completeLangs
     if not showComplete:
       frame = self.incompleteLangs
+    self.updateProgress_(progressCallback, 'Filtering languages', 2, 2)
 
+    self.updateProgress_(progressCallback, 'Sorting languages', 0, 1)
     frame = frame.sort_values('chars')
+    self.updateProgress_(progressCallback, 'Sorting languages', 1, 1)
 
-    return self.tableFromFrame(frame)
+    self.updateProgress_(progressCallback, 'Preparing rows', 0, 1)
+    rows = self.tableFromFrame(frame)
+    self.updateProgress_(progressCallback, 'Preparing rows', 1, 1)
+    return rows
+
+  def charMissingFromFont_(self, char, font, charset, glyphNames, missingCache):
+    if char in missingCache:
+      return missingCache[char]
+
+    if char in charset:
+      missingCache[char] = False
+      return False
+
+    glyphInfo = Glyphs.glyphInfoForUnicode(ord(char), font)
+    missing = glyphInfo is None or glyphInfo.name not in glyphNames
+    missingCache[char] = missing
+    return missing
+
+  def updateProgress_(self, progressCallback, phase, completedUnits, totalUnits):
+    if progressCallback:
+      progressCallback(phase, completedUnits, totalUnits)
 
 
 class DataSource:

@@ -103,7 +103,13 @@ class DataSourceHyperglot(DataSource):
         # if undefined, but we will take a slightly different approach by
         # assuming 'living' only if speakers is > 0.
 
-        speakers = -1 if lang['speakers'] is None else lang.speakers
+        if lang['speakers'] in (None, 'unknown'):
+          speakers = -1
+          scriptSpeakers = 0
+        else:
+          speakers = lang['speakers']
+          scriptSpeakers = speakers
+
         self.langs[langId] = dict(
           id=langId,
           iso=iso,
@@ -111,7 +117,7 @@ class DataSourceHyperglot(DataSource):
           scriptId=self._scriptNameToIso(ortho.script),
           lang_status='' if lang['status'] is None and speakers <= 0 else lang.status,
           ortho_status='' if ortho['status'] is None else ortho.status,
-          speakers=speakers,
+          speakers=speakers if ortho['status'] == 'primary' else 0,
           chars=sorted(set(ortho.base_chars)) + sorted(set(ortho.base_marks)),
         )
 
@@ -119,10 +125,10 @@ class DataSourceHyperglot(DataSource):
           self.scripts[scriptId] = dict(
             id=scriptId,
             name=ortho.script,
-            speakers=lang.get('speakers', 0) or 0,
+            speakers=scriptSpeakers if ortho['status'] == 'primary' else 0,
           )
         elif self.langs[langId]['ortho_status'] == 'primary':
-          self.scripts[scriptId]['speakers'] += lang.get('speakers', 0) or 0
+          self.scripts[scriptId]['speakers'] += scriptSpeakers
 
   def _scriptNameToIso(self, name):
     if name not in self._scriptNames:

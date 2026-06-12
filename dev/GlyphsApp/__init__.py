@@ -1,5 +1,6 @@
 # (Fake)GlyphsApp
 
+from pathlib import Path
 from glyphsLib import GSFont
 import xml.etree.ElementTree as etree
 
@@ -9,7 +10,7 @@ WINDOW_MENU = "WINDOW_MENU"
 
 
 class cfg:
-  glyphsFile = "test.glyphs"
+  glyphsFile = str(Path(__file__).resolve().parent.parent / "test.glyphs")
   import sys
   if len(sys.argv) >= 2:
     glyphsFile = sys.argv[1]
@@ -44,6 +45,9 @@ class GSApplication:
     pass
 
 Glyphs = GSApplication()
+
+def glyphInfoForUnicode(code, font=None):
+  return Glyphs.glyphInfoForUnicode(code, font)
 
 class GSDocument:
   def __init__(self, font, filePath):

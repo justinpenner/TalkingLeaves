@@ -49,31 +49,33 @@ class Data:
     charset = {g.string for g in font.glyphs if g.unicode}
     glyphNames = {g.name for g in font.glyphs}
     missingCache = {}
-    totalChars = len(set(c for chars in frame['chars'] for c in chars))
+    uniqueChars = list(dict.fromkeys(c for chars in frame['chars'] for c in chars))
+    totalChars = len(uniqueChars)
     processedChars = 0
     lastProgressUpdate = 0
 
     self.updateProgress_(progressCallback, 'Scanning characters', 0, totalChars)
 
+    # Resolve each unique character once per script
+    for c in uniqueChars:
+      self.charMissingFromFont_(c, font, charset, glyphNames, missingCache)
+      processedChars += 1
+      if (
+        progressCallback and (
+        processedChars == totalChars or
+        processedChars == 1 or
+        time.perf_counter() - lastProgressUpdate >= 0.03
+        )
+      ):
+        progressCallback('Scanning characters', processedChars, totalChars)
+        lastProgressUpdate = time.perf_counter()
+
     # Keep only chars that are missing from the font
     for y in frame.index:
-      missingChars = []
-      for c in frame.at[y, 'chars']:
-        if c not in missingCache:
-          processedChars += 1
-          if (
-            progressCallback and (
-            processedChars == totalChars or
-            processedChars == 1 or
-            time.perf_counter() - lastProgressUpdate >= 0.03
-            )
-          ):
-            progressCallback('Scanning characters', processedChars, totalChars)
-            lastProgressUpdate = time.perf_counter()
-
-        if self.charMissingFromFont_(c, font, charset, glyphNames, missingCache):
-          missingChars.append(c)
-      frame.at[y, 'chars'] = CharList(missingChars)
+      frame.at[y, 'chars'] = CharList([
+        c for c in frame.at[y, 'chars']
+        if missingCache[c]
+      ])
 
     # Optionally hide langs with incomplete/complete char sets
     self.updateProgress_(progressCallback, 'Filtering languages', 0, 2)
